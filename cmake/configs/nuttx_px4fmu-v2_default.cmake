@@ -162,7 +162,7 @@ set(config_module_list
 	# sonar group
 	# drivers/sonar_group_service
 	#modules/mc_alt_estimator
-	modules/mc_localization_EKF
+	#modules/mc_localization_EKF
 	
 	#
 	# Demo apps

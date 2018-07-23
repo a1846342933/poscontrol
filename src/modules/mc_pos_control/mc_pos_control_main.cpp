@@ -225,7 +225,7 @@ private:
 		param_t alt_mode;
 		param_t opt_recover;
 
-	}		_params_handles;		/**< handles for interesting parameters */
+	}		_params_handles;		/**< handles for interesting parameters 这是实际设置的参数值 */
 
 	struct {
 		float thr_min;
@@ -986,11 +986,11 @@ MulticopterPositionControl::limit_pos_sp_offset()
 //		orb_copy(ORB_ID(alt_estimate), _alt_estimate_sub, &alt);
 //	}
 //
-//	if(_manual.z<0.5f||_manual.z>0.5f)		//manual control
+//	if(_manual.z<0.5f||_manual.z>0.5f)		//manual control手动控制
 //	{
 //		*thrust=_manual.z;
-//		if(*thrust>0.88f)
-//			*thrust=0.88f;
+//		if(*thrust>0.98f)
+//			*thrust=0.98f;
 //		//ref_height=sonar.distance[0]/100.0f;
 //		ref_height = alt.altitude;
 //		//ref_height1=ref_height;		//debug
@@ -1000,7 +1000,7 @@ MulticopterPositionControl::limit_pos_sp_offset()
 //		//height_pre = ref_height;
 //		Integral = 0;
 //	}
-//	else			//auto altitude control
+//	else			//auto altitude control自动
 //	{
 //		if(flag_auto_first)
 //		{
@@ -1038,8 +1038,8 @@ MulticopterPositionControl::limit_pos_sp_offset()
 //					*thrust = thrust_pre;
 //				}
 //
-//				if(*thrust>0.88f)
-//					*thrust=0.88f;
+//				if(*thrust>0.98f)
+//					*thrust=0.98f;
 //				else if(*thrust<0.5f)
 //					*thrust=0.5f;
 //
@@ -1063,126 +1063,128 @@ MulticopterPositionControl::limit_pos_sp_offset()
 void
 MulticopterPositionControl::caculate_thrust(float *thrust)
 {
-	//_manual.z=1.0f;
-//	float error=0;
-//	float height;
-//	static float Integral;
-//	static float error_pre=0;
-//	static float ref_height;
-//	static bool flag_auto_first=true;		//first
-//	static float current_thrust;
-//	static float thrust_pre;
-//	static float u0 = 0.0f;					//平衡点推力
-//	static int count = 0;
-//	static bool ctrl_flag = false,alt_flag = false;
-//	float P,D;		//比例、微分项
-//
-//	bool updated;		// estimate
-//	bool updated1;		// sonar
-//
-//	orb_check(_sonar_sub, &updated1);
-//	if(updated1)
-//	{
-//		time1=hrt_absolute_time()/1000;
-//		time_cha=time1-time2;
-//		time2=time1;
-//		count1++;
-//		orb_copy(ORB_ID(sonar_distance), _sonar_sub, &sonar);
-//	}
-//	orb_check(_alt_estimate_sub, &updated);
-//	if(updated)
-//	{
-//		orb_copy(ORB_ID(alt_estimate), _alt_estimate_sub, &alt);
-//		if(alt.flag == true)
-//		{
-//			ctrl_flag = true;
-//			alt_flag = true;
-//			count = 0;
-//		}
-//		else
-//		{
-//			alt_flag = false;
-//			ctrl_flag = false;
-//			count++;
-//			if(count == 10)
-//			{
-//				ctrl_flag = true;
-//
-//			}
-//		}
-//	}
-//
-//	if(_manual.z<0.5f||_manual.z>0.5f)		//manual control
-//	{
-//		*thrust = _manual.z;
-//		if(*thrust>0.95f)
-//			*thrust=0.95f;
-//		ref_height = sonar.distance_filter*0.01f;
-//		ref_height = alt.altitude;
-//		ref_height1 = ref_height;		//debug
-//		current_thrust = *thrust;
-//		error_pre = 0;
-//		flag_auto_first = true;
-//		Integral = 0;
-//	}
-//	else			//auto altitude control
-//	{
-//		if(flag_auto_first)
-//		{
-//			flag_auto_first = false;
-//			*thrust = current_thrust;
-//			thrust_pre = *thrust;
-//			u0 = current_thrust;
-//		}
-//		else
-//		{
-//			if(ctrl_flag == true)
-//			{
-//				if(alt_flag == true)
-//				{
-//					height = alt.alt_with_sonar;
-//				}
-//				else
-//				{
-//					height  = alt.altitude;
-//				}
-//				//height1 = height;			//debug
-//				error=ref_height-height;
-//
-//				Integral+=_params.vel_i(2)*error;
-//				if(Integral>0.1f)
-//					Integral = 0.1f;
-//				else if(Integral<-0.1f)
-//					Integral = -0.1f;
-//
-//				P = _params.vel_p(2)*error;
-//				D = _params.vel_d(2)*(error-error_pre);
-//
-////				if(D > 0.03f)
-////					D = 0.03f;
-////				else if(D < -0.03f)
-////					D = -0.03f;
-//				//*thrust = u0-_params.vel_p(2)*thrust_pre+_params.vel_i(2)*error-_params.vel_d(2)*error_pre+Integral;
-//
-//				*thrust = u0+P+Integral+D;
-//				*thrust = _manual.z;
-//				if(*thrust>0.95f)
-//					*thrust = 0.95f;
-//				else if(*thrust<0.6f)
-//					*thrust = 0.6f;
-//
-//				error_pre = error;
-//				thrust_pre = *thrust;
-//
-//				_att_sp.z_sp = ref_height;
-//
-//			}
-//			else
-//			{
-//				*thrust = thrust_pre;
-//			}
-//		}
-//	}
+	_manual.z=1.0f;
+	float error=0;
+	float height;
+	static float Integral;
+	static float error_pre=0;
+	static float ref_height;
+	static bool flag_auto_first=true;		//first
+	static float current_thrust;
+	static float thrust_pre;
+	static float u0 = 0.0f;					//平衡点推力
+	static int count = 0;
+	static bool ctrl_flag = false,alt_flag = false;
+	float P,D;		//比例、微分项
+
+	bool updated;		// estimate
+	bool updated1;		// sonar
+
+	orb_check(_sonar_sub, &updated1);
+	if(updated1)
+	{
+		time1=hrt_absolute_time()/1000;
+		time_cha=time1-time2;
+		time2=time1;
+		count1++;
+		orb_copy(ORB_ID(sonar_distance), _sonar_sub, &sonar);
+	}
+	orb_check(_alt_estimate_sub, &updated);
+	if(updated)//姿态估计相关标志位操作
+	{
+		orb_copy(ORB_ID(alt_estimate), _alt_estimate_sub, &alt);
+		if(alt.flag == true)
+		{						//有姿态估计值之后就将控制标志位ctrl_flag和高度估计标志位alt_flag置1,否则就都置零。
+			ctrl_flag = true;
+			alt_flag = true;
+			count = 0;
+		}
+		else
+		//如果alt.flag == false，订阅姿态估计消息10次之后仍然为0（没有获取到姿态估计值？）,则置控制标志位为true？？？？
+		{
+			alt_flag = false;
+			ctrl_flag = false;
+			count++;
+			if(count == 10)
+			{
+				ctrl_flag = true;
+
+			}
+		}
+	}
+	//定高模式
+	if(_manual.z<0.5f||_manual.z>0.5f)		//manual control
+	{
+		*thrust = _manual.z;
+		if(*thrust>0.98f)
+			*thrust=0.98f;
+		ref_height = sonar.distance_filter*0.01f;//超声波读数（mm）
+		ref_height = alt.altitude;
+		ref_height1 = ref_height;		//debug
+		current_thrust = *thrust;
+		error_pre = 0;
+		flag_auto_first = true;
+		Integral = 0;
+	}
+	else			//auto altitude control
+	{
+		if(flag_auto_first)//第一次定高
+		{
+			flag_auto_first = false;
+			*thrust = current_thrust;
+			thrust_pre = *thrust;
+			u0 = current_thrust;
+		}
+		else//第一次之后的定高
+		{
+			if(ctrl_flag == true)
+			{
+				if(alt_flag == true)
+				{
+					height = alt.alt_with_sonar;
+				}
+				else
+				{
+					height  = alt.altitude;
+				}
+				//height1 = height;			//debug
+				error=ref_height-height;
+
+				Integral+=_params.vel_i(2)*error;
+				if(Integral>0.1f)
+					Integral = 0.1f;
+				else if(Integral<-0.1f)
+					Integral = -0.1f;
+
+				P = _params.vel_p(2)*error;
+				D = _params.vel_d(2)*(error-error_pre);
+
+//				if(D > 0.03f)
+//					D = 0.03f;
+//				else if(D < -0.03f)
+//					D = -0.03f;
+				//*thrust = u0-_params.vel_p(2)*thrust_pre+_params.vel_i(2)*error-_params.vel_d(2)*error_pre+Integral;
+
+				*thrust = u0+P+Integral+D;
+				*thrust = _manual.z;
+				if(*thrust>0.98f)
+					*thrust = 0.98f;
+				else if(*thrust<0.6f)
+					*thrust = 0.6f;
+
+				error_pre = error;
+				thrust_pre = *thrust;
+
+				_att_sp.z_sp = ref_height;
+
+			}
+			else
+			{
+				*thrust = thrust_pre;
+			}
+		}
+	}
+
 	*thrust = _manual.z;
 }
 void

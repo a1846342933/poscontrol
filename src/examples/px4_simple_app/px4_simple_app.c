@@ -56,7 +56,8 @@
 #include <uORB/topics/ekf_localization.h>
 //#include <uORB/topics/alt_ctrl.h>
 
-__EXPORT int px4_simple_app_main(int argc, char *argv[]);
+//__EXPORT int px4_simple_app_main(int argc, char *argv[]);
+int px4_simple_app_main(int argc, char *argv[]);
 
 int px4_simple_app_main(int argc, char *argv[]) {
 //	PX4_INFO("Hello Sky!");
@@ -162,7 +163,7 @@ int px4_simple_app_main(int argc, char *argv[]) {
 				printf("=========Press CTRL+C to abort=========\n");
 			}
 		}
-		/*char c;
+		char c;
 		struct pollfd fds1;
 		int ret;
 		fds1.fd = 0;
@@ -182,3 +183,4 @@ int px4_simple_app_main(int argc, char *argv[]) {
 
 	return 0;
 }
+

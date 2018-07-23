@@ -1416,8 +1416,8 @@ MavlinkReceiver::handle_message_manual_control(mavlink_message_t *msg)
 		manual.y = man.y / 1000.0f;
 		//manual.y=0.34f;
 		manual.r = man.r / 1000.0f;
-		manual.z = 0.4f;
-		//manual.z = man.z / 1000.0f;
+		//manual.z = 0.4f;
+		manual.z = man.z / 1000.0f;
 
 		if (_manual_pub == nullptr) {
 			_manual_pub = orb_advertise(ORB_ID(manual_control_setpoint), &manual);
