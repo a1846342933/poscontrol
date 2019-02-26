@@ -118,6 +118,34 @@ int sonargroup_service_main(int argc, char *argv[])
     if (!strcmp(argv[1], "status")) {
         if (thread_running) {
             warnx("[SONAR_GTOUP]running");
+            /*******add by fxk********/
+            struct sonar_distance_s 	sonar;
+            int 	_sonar_sub;
+            _sonar_sub = orb_subscribe(ORB_ID(sonar_distance));
+
+            while(1)
+            		{
+            	orb_copy(ORB_ID(sonar_distance), _sonar_sub, &sonar);
+            	warnx("distance0=%d     distance.filter=%d\t",sonar.distance[0],sonar.distance_filter);
+            	warnx("============press CTRL+C to abort============");
+
+            					char c;
+            					struct pollfd fds;
+            					int ret;
+            					fds.fd=0;
+            					fds.events=POLLIN;
+            					ret=poll(&fds,1,0);
+            					if(ret>0)
+            					{
+            						read(0,&c,1);
+            						if(c==0x03||c==0x63||c=='q')
+            						{
+            							warnx("User abort\n");
+            							break;
+            						}
+            					}
+            	usleep(800000);
+            		}
 
         } else {
             warnx("[SONAR_GTOUP]stopped");
@@ -158,18 +186,19 @@ int sonargroup_service_thread_main(int argc, char *argv[])
     orb_advert_t SonarGroupDistance_pub = orb_advertise(ORB_ID(sonar_distance), &sonar);
 
     warnx("[SONAR_GROUP]service start successfully\n");
-    for(int i=2;i<=5;i++)
-    {
-    	SRF01(uart_fd,i,ADVANCEDMODE);
-    	usleep(2000);
-    }
+   //
 
     //获取所有超声波距离 Sonar_group GetRangeAll
     // 周期200ms   18,54   距离超过1米时跳变
-    char sonar_flag[5] = {0,0,0,0,0};
+    char sonar_flag[5] = {1,0,0,0,0};
     while(!thread_should_exit)
     {
-
+    	if(sonar_flag[0])
+    	    	{
+    	    		SRF01(uart_fd,1,RANGE_CM);
+    	    		//wait 70ms to recive the respons
+    	    		//usleep(20000);		//10000
+    	    	}
     	if(sonar_flag[1])
     	{
     		SRF01(uart_fd,2,RANGE_CM);
@@ -196,28 +225,40 @@ int sonargroup_service_thread_main(int argc, char *argv[])
 		//usleep(10000);
 		//SRF01(uart_fd,1,RANGE_CM);
 		//wait 70ms to recive the respons
-		usleep(60000);		// 50000
 
-        sonar.count++;
+		usleep(50000);		// 50000
 
-		for (int i=2;i<=5;i++)
-		{
-			int range=GetRange_new(uart_fd,i);
-			if (range!=-1979)
-			{
-				sonar.distance[i-1]=range;
-				sonar.status[i-1]=1;
-			}
-			else
-			{
-				sonar.distance[i-1]=range;							//add by yly
-				sonar.status[i-1]=0;
-			}
-		}
+//        sonar.count++;
 
-		//暂时屏蔽定高超声波
-		sonar.distance[0] = 20;
-		sonar.status[0] = 1;
+//		for (int i=2;i<=5;i++)
+//		{
+//			int range=GetRange_new(uart_fd,i);
+//			if (range!=-1979)
+//			{
+//				sonar.distance[i-1]=range;
+//				sonar.status[i-1]=1;
+//			}
+//			else
+//			{
+//				sonar.distance[i-1]=range;							//add by yly
+//				sonar.status[i-1]=0;
+//			}
+//		}
+
+		int range=GetRange_new(uart_fd,1);
+		if (range!=-1979)
+							{
+								sonar.distance[0]=range;
+								sonar.status[0]=1;
+							}
+							else
+							{
+								sonar.distance[0]=range;							//add by yly
+								sonar.status[0]=0;
+							}
+//		//暂时屏蔽定高超声波
+//		sonar.distance[0] = 20;
+//		sonar.status[0] = 1;
 
 		sonar.distance_down[3] = sonar.distance_down[2];
 		sonar.distance_down[2] = sonar.distance_down[1];

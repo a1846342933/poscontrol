@@ -567,10 +567,10 @@ int MB12XX::collect(uint8_t index_count_) {
 	report.covariance = 0.0f;
 	report.id = 0;
 //	report.count = count0;
-	if ((MB12XX_BASEADDR - index_count_) == 0) {
+	/*if ((MB12XX_BASEADDR - index_count_) == 0) {
 		//report.current_distance = distance_m;
 		report.distance[0] = distance_m;
-		/* publish it, if we are the primary */
+		 //publish it, if we are the primary
 		if (_distance_sensor_topic0 != nullptr) {
 			orb_publish(ORB_ID(distance_sensor), _distance_sensor_topic0,
 					&report);
@@ -590,7 +590,7 @@ int MB12XX::collect(uint8_t index_count_) {
 	} else if ((MB12XX_BASEADDR - index_count_) == 3) {
 		count0++;
 		report.count = count0;
-		report.distance[3] = distance_m;
+		report.distance[3] = distance_m;*/ //注释by fxk
 		//report.current_distance[1] = distance_m;
 //		/* publish it, if we are the primary */
 //		if (_distance_sensor_topic1 != nullptr) {

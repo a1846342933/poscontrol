@@ -109,6 +109,7 @@ I2C::init()
 
 	if (_dev == nullptr) {
 		DEVICE_DEBUG("failed to init I2C");
+		PX4_ERR("failed to init I2C_1");
 		ret = -ENOENT;
 		goto out;
 	}
@@ -124,6 +125,7 @@ I2C::init()
 		_dev = nullptr;
 		DEVICE_LOG("FAIL: too slow for bus #%u: %u KHz, device max: %u KHz)",
 			   _bus, _bus_clocks[bus_index] / 1000, _frequency / 1000);
+		PX4_ERR("failed to init I2C_2");
 		ret = -EINVAL;
 		goto out;
 	}
@@ -147,9 +149,10 @@ I2C::init()
 
 	// call the probe function to check whether the device is present
 	ret = probe();
-
+	//ret=OK;//by fxk
 	if (ret != OK) {
 		DEVICE_DEBUG("probe failed");
+		PX4_ERR("failed to init I2C_3");
 		goto out;
 	}
 
@@ -158,11 +161,12 @@ I2C::init()
 
 	if (ret != OK) {
 		DEVICE_DEBUG("cdev init failed");
+		PX4_ERR("failed to init I2C_4");
 		goto out;
 	}
 
 	// tell the world where we are
-	DEVICE_LOG("on I2C bus %d at 0x%02x (bus: %u KHz, max: %u KHz)",
+	DEVICE_LOG("on I2C bus %d at 0x%02x (bus: %u KHz, max: %u KHz)!!!!",
 		   _bus, _address, _bus_clocks[bus_index] / 1000, _frequency / 1000);
 
 out:
@@ -175,8 +179,7 @@ out:
 	return ret;
 }
 
-int
-I2C::probe()
+int I2C::probe()
 {
 	// Assume the device is too stupid to be discoverable.
 	return OK;
@@ -216,7 +219,6 @@ I2C::transfer(const uint8_t *send, unsigned send_len, uint8_t *recv, unsigned re
 		}
 
 		ret = I2C_TRANSFER(_dev, &msgv[0], msgs);
-
 		/* success */
 		if (ret == OK) {
 			break;

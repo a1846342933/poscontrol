@@ -68,15 +68,15 @@
 #define RGBLED_ONTIME 120
 #define RGBLED_OFFTIME 120
 
-#define ADDR			PX4_I2C_OBDEV_LED	/**< I2C adress of TCA62724FMG */
-#define SUB_ADDR_START		0x01	/**< write everything (with auto-increment) */
-#define SUB_ADDR_PWM0		0x81	/**< blue     (without auto-increment) */
-#define SUB_ADDR_PWM1		0x82	/**< green    (without auto-increment) */
-#define SUB_ADDR_PWM2		0x83	/**< red      (without auto-increment) */
-#define SUB_ADDR_SETTINGS	0x84	/**< settings (without auto-increment)*/
+#define ADDR			PX4_I2C_OBDEV_LED	/**< I2C adress of TCA62724FMG *///0x38
+#define SUB_ADDR_START		0x20//or 0x57 0x01	/**< write everything (with auto-increment) */
+#define SUB_ADDR_PWM0		0x40	/**< blue     (without auto-increment) */
+#define SUB_ADDR_PWM1		0x50//82	/**< green    (without auto-increment) */
+#define SUB_ADDR_PWM2		0x60//83	/**< red      (without auto-increment) */
+#define SUB_ADDR_SETTINGS	0x20	/**84< settings (without auto-increment)*/
 
-#define SETTING_NOT_POWERSAVE	0x01	/**< power-save mode not off */
-#define SETTING_ENABLE   	0x02	/**< on */
+#define SETTING_NOT_POWERSAVE	0x00//0x01	/**< power-save mode not off */
+#define SETTING_ENABLE   	0x20//0x02	/**< on */
 
 
 class RGBLED : public device::I2C
@@ -194,12 +194,16 @@ RGBLED::probe()
 
 	unsigned prevretries = _retries;
 	_retries = 4;
-
-	if ((ret = get(on, powersave, r, g, b)) != OK ||
-	    (ret = send_led_enable(false) != OK) ||
-	    (ret = send_led_enable(false) != OK)) {
-		return ret;
-	}
+	if (
+		    (ret = send_led_enable(false) != OK) ||
+		    (ret = send_led_enable(false) != OK)) {
+			return ret;
+		}
+	//if ((ret = get(on, powersave, r, g, b)) != OK ||
+	 //   (ret = send_led_enable(false) != OK) ||
+	    //(ret = send_led_enable(false) != OK)) {
+		//return ret;
+	}//Since the NCP5623B is a receiver only
 
 	_retries = prevretries;
 
@@ -213,8 +217,8 @@ RGBLED::info()
 	bool on, powersave;
 	uint8_t r, g, b;
 
-	ret = get(on, powersave, r, g, b);
-
+	//ret = get(on, powersave, r, g, b);//Since the NCP5623B is a receiver only ret=0;
+      ret=0;
 	if (ret == OK) {
 		/* we don't care about power-save mode */
 		DEVICE_LOG("state: %s", on ? "ON" : "OFF");
@@ -557,9 +561,9 @@ RGBLED::send_led_enable(bool enable)
 		settings_byte |= SETTING_ENABLE;
 	}
 
-	settings_byte |= SETTING_NOT_POWERSAVE;
+	settings_byte |= SETTING_NOT_POWERSAVE;/*¹Ø±Õpowersave */
 
-	const uint8_t msg[2] = { SUB_ADDR_SETTINGS, settings_byte};
+	const uint8_t msg[1] = { settings_byte};
 
 	return transfer(msg, sizeof(msg), nullptr, 0);
 }
@@ -571,13 +575,18 @@ int
 RGBLED::send_led_rgb()
 {
 	/* To scale from 0..255 -> 0..15 shift right by 4 bits */
-	const uint8_t msg[6] = {
-		SUB_ADDR_PWM0, static_cast<uint8_t>((_b >> 4) * _brightness * _max_brightness + 0.5f),
-		SUB_ADDR_PWM1, static_cast<uint8_t>((_g >> 4) * _brightness * _max_brightness + 0.5f),
-		SUB_ADDR_PWM2, static_cast<uint8_t>((_r >> 4) * _brightness * _max_brightness + 0.5f)
+	const uint8_t msg[3] = {
+			SUB_ADDR_PWM0|static_cast<uint8_t>((_b >> 3) * _brightness * _max_brightness + 0.5f),
+			SUB_ADDR_PWM1|static_cast<uint8_t>((_b >> 3) * _brightness * _max_brightness + 0.5f),
+			SUB_ADDR_PWM2|static_cast<uint8_t>((_b >> 3) * _brightness * _max_brightness + 0.5f)
+			//SUB_ADDR_PWM0, static_cast<uint8_t>((_b >> 4) * _brightness * _max_brightness + 0.5f),
+		//SUB_ADDR_PWM1, static_cast<uint8_t>((_g >> 4) * _brightness * _max_brightness + 0.5f),
+		//SUB_ADDR_PWM2, static_cast<uint8_t>((_r >> 4) * _brightness * _max_brightness + 0.5f)
 	};
 	return transfer(msg, sizeof(msg), nullptr, 0);
-}
+}//static_cast<uint8_t>((i >> 4) * (31f / 5f))
+//static_cast<uint8_t>((_b >> 3) * _brightness * _max_brightness + 0.5f
+
 
 int
 RGBLED::get(bool &on, bool &powersave, uint8_t &r, uint8_t &g, uint8_t &b)
@@ -586,7 +595,7 @@ RGBLED::get(bool &on, bool &powersave, uint8_t &r, uint8_t &g, uint8_t &b)
 	int ret;
 
 	ret = transfer(nullptr, 0, &result[0], 2);
-
+     //ret=0;
 	if (ret == OK) {
 		on = result[0] & SETTING_ENABLE;
 		powersave = !(result[0] & SETTING_NOT_POWERSAVE);
@@ -597,7 +606,7 @@ RGBLED::get(bool &on, bool &powersave, uint8_t &r, uint8_t &g, uint8_t &b)
 	}
 
 	return ret;
-}
+}//Since the NCP5623B is a receiver only
 
 void
 RGBLED::update_params()
@@ -622,6 +631,8 @@ rgbled_usage()
 	warnx("options:");
 	warnx("    -b i2cbus (%d)", PX4_I2C_BUS_LED);
 	warnx("    -a addr (0x%x)", ADDR);
+	int a =PX4_I2C_BUS_LED,c=PX4_I2C_BUS_EXPANSION;
+	warnx("the bus is %d,%d",a,c);
 }
 
 int
@@ -639,7 +650,7 @@ rgbled_main(int argc, char *argv[])
 	while ((ch = px4_getopt(argc, argv, "a:b:", &myoptind, &myoptarg)) != EOF) {
 		switch (ch) {
 		case 'a':
-			rgbledadr = strtol(myoptarg, NULL, 0);
+			rgbledadr =  (myoptarg, NULL, 0);
 			break;
 
 		case 'b':
@@ -671,7 +682,8 @@ rgbled_main(int argc, char *argv[])
 		if (i2cdevice == -1) {
 			// try the external bus first
 			i2cdevice = PX4_I2C_BUS_EXPANSION;
-			g_rgbled = new RGBLED(PX4_I2C_BUS_EXPANSION, rgbledadr);
+			g_rgbled = new RGBLED(PX4_I2C_BUS_EXPANSION, rgbledadr);  //zhushi by fxk
+			//g_rgbled = new RGBLED(2, rgbledadr);
 
 			if (g_rgbled != nullptr && OK != g_rgbled->init()) {
 				delete g_rgbled;

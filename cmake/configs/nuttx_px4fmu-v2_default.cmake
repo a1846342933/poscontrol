@@ -23,7 +23,7 @@ set(config_module_list
 	drivers/l3gd20
 	drivers/hmc5883
 	drivers/ms5611
-	drivers/mb12xx
+	#drivers/mb12xx
 	#drivers/srf02
 	#drivers/sf0x
 	#drivers/ll40ls
@@ -48,6 +48,7 @@ set(config_module_list
 	drivers/bst
 	#drivers/snapdragon_rc_pwm
 	drivers/lis3mdl
+	drivers/vl53l1x
 
 	#
 	# System commands
@@ -160,7 +161,7 @@ set(config_module_list
 
 	# pixeyas-specific modules
 	# sonar group
-	# drivers/sonar_group_service
+	 drivers/sonar_group_service
 	#modules/mc_alt_estimator
 	#modules/mc_localization_EKF
 	
@@ -171,6 +172,7 @@ set(config_module_list
 	# Tutorial code from
 	# https://px4.io/dev/px4_simple_app
 	 examples/px4_simple_app
+	 examples/my_test_app
 
 	# Tutorial code from
 	# https://px4.io/dev/daemon

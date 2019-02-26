@@ -209,6 +209,7 @@ int mc_alt_estimator_thread_main(int argc, char *argv[])
     		orb_check(_sonar_sub, &updated);
     		if(updated)		// new range data
     		{
+    			//超声波产生一次观测置就进行一次KF，滤波结果给alt.alt_with_sonar，并置alt.flag为1
     			orb_copy(ORB_ID(sonar_distance), _sonar_sub, &sonar);
     			y(0,0) = sonar.distance_filter*0.01f;
     			inv = H*P0*H1;		// 1x3  3x3  3x1 = 1x1
@@ -227,6 +228,7 @@ int mc_alt_estimator_thread_main(int argc, char *argv[])
     		}
     		else
     		{
+    			//若无观测数据产生，则不进行修正，置alt.flag为0
     			x_hat = x_hat0;
     			P = P0;
     			alt.flag = false;
@@ -237,7 +239,7 @@ int mc_alt_estimator_thread_main(int argc, char *argv[])
 
     		if(x_hat(2,0)<-bias_limit)
     			x_hat(2,0) = -bias_limit;
-
+    		//alt.altitude的值为融合最终滤波结果的值
     		alt.altitude = x_hat(0,0);
     		alt.vel_z = x_hat(1,0);
 

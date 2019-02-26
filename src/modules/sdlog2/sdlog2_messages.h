@@ -309,6 +309,7 @@ struct log_DIST_s {
 	//uint8_t id;
 	//uint8_t type;
 	//uint8_t orientation;
+	float current_distance;
 	float distance[4];
 	//float covariance;
 };

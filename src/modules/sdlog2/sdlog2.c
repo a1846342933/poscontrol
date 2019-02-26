@@ -2144,10 +2144,12 @@ int sdlog2_thread_main(int argc, char *argv[])
 //				log_msg.body.log_DIST.id = buf.distance_sensor.id;
 //				log_msg.body.log_DIST.type = buf.distance_sensor.type;
 //				log_msg.body.log_DIST.orientation = buf.distance_sensor.orientation;
-				log_msg.body.log_DIST.distance[0] = buf.distance_sensor.distance[0];
+				log_msg.body.log_DIST.current_distance=buf.distance_sensor.current_distance;
+				/*log_msg.body.log_DIST.distance[0] = buf.distance_sensor.distance[0];
 				log_msg.body.log_DIST.distance[1] = buf.distance_sensor.distance[1];
 				log_msg.body.log_DIST.distance[2] = buf.distance_sensor.distance[2];
-				log_msg.body.log_DIST.distance[3] = buf.distance_sensor.distance[3];
+				log_msg.body.log_DIST.distance[3] = buf.distance_sensor.distance[3];*/
+				//by fxk
 				//log_msg.body.log_DIST.covariance = buf.distance_sensor.covariance;
 				LOGBUFFER_WRITE_AND_COUNT(DIST);
 			}

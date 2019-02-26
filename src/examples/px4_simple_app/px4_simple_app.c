@@ -54,10 +54,12 @@
 #include <uORB/topics/manual_control_setpoint.h>
 #include <uORB/topics/distance_sensor.h>
 #include <uORB/topics/ekf_localization.h>
+#include <uORB/topics/manual_control_setpoint.h>
 //#include <uORB/topics/alt_ctrl.h>
 
 //__EXPORT int px4_simple_app_main(int argc, char *argv[]);
 int px4_simple_app_main(int argc, char *argv[]);
+
 
 int px4_simple_app_main(int argc, char *argv[]) {
 //	PX4_INFO("Hello Sky!");
@@ -70,7 +72,9 @@ int px4_simple_app_main(int argc, char *argv[]) {
 //	int mb12xx_sub_fd0 = orb_subscribe_multi(ORB_ID(distance_sensor), 0);
 //	int mb12xx_sub_fd0 = orb_subscribe_multi(ORB_ID(distance_sensor), 0);
 	//int mb12xx_sub_fd1 = orb_subscribe_multi(ORB_ID(distance_sensor), 1);
-	int sensor_sub_fd = orb_subscribe(ORB_ID(ekf_localization));
+	int manual_sub=orb_subscribe(ORB_ID(manual_control_setpoint));
+	//int sensor_sub_fd = orb_subscribe(ORB_ID(ekf_localization));
+	//int sensor_distance_fd = orb_subscribe(ORB_ID(distance_sensor));
 
 	//orb_set_interval(sensor_sub_fd, 50);	// limit the update rate to 5 Hz
 //	orb_set_interval(sensor_sub_fd, 200);	// limit the update rate to 5 Hz
@@ -81,10 +85,13 @@ int px4_simple_app_main(int argc, char *argv[]) {
 
 //	struct distance_sensor_s mb12xx_data0;
 //	memset(&mb12xx_data0, 0, sizeof(mb12xx_data0));
+	struct manual_control_setpoint_s manual;
+	memset(&manual, 0, sizeof(manual));
+//	struct ekf_localization_s mav_position;
+//	memset(&mav_position, 0, sizeof(mav_position));
 
-	struct ekf_localization_s mav_position;
-	memset(&mav_position, 0, sizeof(mav_position));
-
+//	struct distance_sensor_s d_s;
+//	memset(&d_s, 0, sizeof(d_s));
 	//struct distance_sensor_s mb12xx_data1;
 	//memset(&mb12xx_data1, 0, sizeof(mb12xx_data1));
 
@@ -97,7 +104,7 @@ int px4_simple_app_main(int argc, char *argv[]) {
 	/* one could wait for multiple topics with this technique, just using one here */
 	px4_pollfd_struct_t fds[] = {
 	//{ .fd = sensor_sub_fd,   .events = POLLIN },
-			{ .fd = sensor_sub_fd, .events = POLLIN },
+			{ .fd = manual_sub, .events = POLLIN },
 	/* there could be more file descriptors here, in the form like:
 	 * { .fd = other_sub_fd,   .events = POLLIN },
 	 */
@@ -125,8 +132,11 @@ int px4_simple_app_main(int argc, char *argv[]) {
 				/* obtained data for the first file descriptor */
 				/* copy sensors raw data into local buffer */
 				//orb_copy(ORB_ID(sonar_distance), sensor_sub_fd, &sonar);
-				orb_copy(ORB_ID(ekf_localization), sensor_sub_fd,
-						&mav_position);
+
+//				orb_copy(ORB_ID(ekf_localization), sensor_sub_fd,
+//						&mav_position);
+
+				//orb_copy(ORB_ID(distance_sensor), sensor_distance_fd,&d_s);
 				//orb_copy(ORB_ID(distance_sensor), mb12xx_sub_fd1,
 				//		&mb12xx_data1);
 				//orb_copy(ORB_ID(alt_ctrl), alt_ctrl_sub_, &alt_control);
@@ -141,9 +151,15 @@ int px4_simple_app_main(int argc, char *argv[]) {
 //							(double) mb12xx_data0.distance[2],(double) mb12xx_data0.distance[3]);
 //					printf("[MB12xx0] dt = %.1f\n",
 //							(double)((mb12xx_data0.timestamp-T0)/1000.0/(mb12xx_data0.count-count0)));
-					printf("[EKF] x = %.2f vx = %.2f y = %.2f vy = %.2f\n",
-							(double) mav_position.x, (double) mav_position.vx,
-							(double) mav_position.y, (double) mav_position.vy);
+
+//					printf("[EKF] x = %.2f vx = %.2f y = %.2f vy = %.2f\n",
+//							(double) mav_position.x, (double) mav_position.vx,
+//							(double) mav_position.y, (double) mav_position.vy);
+
+				orb_copy(ORB_ID(manual_control_setpoint),manual_sub,&manual);
+				warnx("Manual:x=%.2f,y=%.2f,z=%.2f",(double)manual.x,(double)manual.y,(double)manual.z);
+
+					//printf("distance_sensor.current_distance = %f",(double)d_s.current_distance);
 //					printf("[MB12xx1] dist1 = %.2f T1 = %.1f \n",
 //							(double) mb12xx_data1.current_distance,
 //							(double)((mb12xx_data1.timestamp-T1)/1000.0/(mb12xx_data1.count-count1)));
