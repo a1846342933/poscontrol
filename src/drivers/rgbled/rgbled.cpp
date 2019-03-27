@@ -69,14 +69,14 @@
 #define RGBLED_OFFTIME 120
 
 #define ADDR			PX4_I2C_OBDEV_LED	/**< I2C adress of TCA62724FMG *///0x38
-#define SUB_ADDR_START		0x20//or 0x57 0x01	/**< write everything (with auto-increment) */
+#define SUB_ADDR_START		0x58//or 0x57 0x01	/**< write everything (with auto-increment) */
 #define SUB_ADDR_PWM0		0x40	/**< blue     (without auto-increment) */
-#define SUB_ADDR_PWM1		0x50//82	/**< green    (without auto-increment) */
-#define SUB_ADDR_PWM2		0x60//83	/**< red      (without auto-increment) */
+#define SUB_ADDR_PWM1		0x60//82	/**< green    (without auto-increment) */
+#define SUB_ADDR_PWM2		0x80//83	/**< red      (without auto-increment) */
 #define SUB_ADDR_SETTINGS	0x20	/**84< settings (without auto-increment)*/
 
 #define SETTING_NOT_POWERSAVE	0x00//0x01	/**< power-save mode not off */
-#define SETTING_ENABLE   	0x20//0x02	/**< on */
+#define SETTING_ENABLE   	0x68//0x02	/**< on */
 
 
 class RGBLED : public device::I2C
@@ -90,7 +90,7 @@ public:
 	virtual int		probe();
 	virtual int		info();
 	virtual int		ioctl(device::file_t *filp, int cmd, unsigned long arg);
-
+	//const uint8_t msgx[1] = { 0x3d };
 private:
 	work_s			_work;
 
@@ -104,10 +104,12 @@ private:
 	float			_max_brightness;
 
 	bool			_running;
-	int			_led_interval;
-	bool			_should_run;
-	int			_counter;
-	int			_param_sub;
+		int			_led_interval;
+		bool			_should_run;
+		int			_counter;
+		int			_param_sub;
+		//int     switchx;
+
 
 	void 			set_color(rgbled_color_t ledcolor);
 	void			set_mode(rgbled_mode_t mode);
@@ -118,7 +120,7 @@ private:
 
 	int			send_led_enable(bool enable);
 	int			send_led_rgb();
-	int			get(bool &on, bool &powersave, uint8_t &r, uint8_t &g, uint8_t &b);
+//	int			get(bool &on, bool &powersave, uint8_t &r, uint8_t &g, uint8_t &b);
 	void		update_params();
 };
 
@@ -149,6 +151,8 @@ RGBLED::RGBLED(int bus, int rgbled) :
 	_should_run(false),
 	_counter(0),
 	_param_sub(-1)
+   //xjp
+    //switchx(1)
 {
 	memset(&_work, 0, sizeof(_work));
 	memset(&_pattern, 0, sizeof(_pattern));
@@ -179,8 +183,8 @@ int
 RGBLED::probe()
 {
 	int ret;
-	bool on, powersave;
-	uint8_t r, g, b;
+	//bool on, powersave;
+	//uint8_t r, g, b;
 
 	/**
 	   this may look strange, but is needed. There is a serial
@@ -202,8 +206,8 @@ RGBLED::probe()
 	//if ((ret = get(on, powersave, r, g, b)) != OK ||
 	 //   (ret = send_led_enable(false) != OK) ||
 	    //(ret = send_led_enable(false) != OK)) {
-		//return ret;
-	}//Since the NCP5623B is a receiver only
+		//return ret;}
+	//Since the NCP5623B is a receiver only
 
 	_retries = prevretries;
 
@@ -214,8 +218,9 @@ int
 RGBLED::info()
 {
 	int ret;
-	bool on, powersave;
-	uint8_t r, g, b;
+	bool on=1;
+        //bool on, powersave;
+	uint8_t r=1, g=1, b=1;
 
 	//ret = get(on, powersave, r, g, b);//Since the NCP5623B is a receiver only ret=0;
       ret=0;
@@ -318,8 +323,16 @@ RGBLED::led()
 		if (_counter >= 2) {
 			_counter = 0;
 		}
-
-		send_led_enable(_counter == 0);
+        //send_led_enable(_counter == 0);
+		//send_led_rgb();
+		if(_counter == 0){
+			_brightness=1;
+		}
+		else{
+			_brightness=0;
+		}
+		//send_led_enable(_counter == 0);
+		send_led_rgb();
 
 		break;
 
@@ -484,8 +497,9 @@ RGBLED::set_mode(rgbled_mode_t mode)
 
 		case RGBLED_MODE_ON:
 			_brightness = 1.0f;
-			send_led_rgb();
+             send_led_rgb();
 			send_led_enable(true);
+
 			break;
 
 		case RGBLED_MODE_BLINK_SLOW:
@@ -524,6 +538,7 @@ RGBLED::set_mode(rgbled_mode_t mode)
 			_counter = 0;
 			_brightness = 1.0f;
 			send_led_enable(true);
+			send_led_rgb();
 			break;
 
 		default:
@@ -532,6 +547,7 @@ RGBLED::set_mode(rgbled_mode_t mode)
 		}
 
 		/* if it should run now, start the workq */
+		warnx(" sh ru #%u  %u", _should_run,_running);
 		if (_should_run && !_running) {
 			_running = true;
 			work_queue(LPWORK, &_work, (worker_t)&RGBLED::led_trampoline, this, 1);
@@ -555,17 +571,33 @@ RGBLED::set_pattern(rgbled_pattern_t *pattern)
 int
 RGBLED::send_led_enable(bool enable)
 {
-	uint8_t settings_byte = 0;
+	uint8_t settings_byte = 0x01;
 
 	if (enable) {
-		settings_byte |= SETTING_ENABLE;
+		settings_byte |= SETTING_ENABLE; //0x680x68
+		//settings_byte = 0x68;
+		//const uint8_t msg[1] = {settings_byte};
+		//return transfer(msg, sizeof(msg), nullptr, 0);
 	}
+	//else
+	settings_byte |= SETTING_NOT_POWERSAVE;/*¹Ø±Õpowersave */ //0x00
+	//switchx=1;
+		//const uint8_t msg0[1] = {0x3d};
+   // const uint8_t msg1[1] = {0x40};
+   // const uint8_t msg2[1] = {0x60};
+    //const uint8_t msg3[1] = {0x80};
+    //transfer(msg0, sizeof(msg0), nullptr, 0);
+    //transfer(msg1, sizeof(msg1), nullptr, 0);
+    //transfer(msg2, sizeof(msg2), nullptr, 0);
+	const uint8_t msg1[1] = {settings_byte};
+	//return transfer(msg, sizeof(msg), nullptr, 0);
+	//if (!enable) {
+			//switchx=0;  //0x68
+		//}
 
-	settings_byte |= SETTING_NOT_POWERSAVE;/*¹Ø±Õpowersave */
-
-	const uint8_t msg[1] = { settings_byte};
-
-	return transfer(msg, sizeof(msg), nullptr, 0);
+	  //transfer(msg1, sizeof(msg1), nullptr, 0);
+	  transfer(msg1, sizeof(msg1), nullptr, 0);
+	  return transfer(msg1, sizeof(msg1), nullptr, 0);
 }
 
 /**
@@ -574,39 +606,79 @@ RGBLED::send_led_enable(bool enable)
 int
 RGBLED::send_led_rgb()
 {
+	//if(switchx==1)
+//{
+
+	uint8_t r,g,b;
+   b=static_cast<uint8_t>(SUB_ADDR_PWM0|static_cast<uint8_t>((_b >> 3) * _brightness * _max_brightness + 0.5f));
+   g=static_cast<uint8_t>(SUB_ADDR_PWM1|static_cast<uint8_t>((_g >> 3) * _brightness * _max_brightness + 0.5f));
+   r=static_cast<uint8_t>(SUB_ADDR_PWM2|static_cast<uint8_t>((_r >> 3) * _brightness * _max_brightness + 0.5f));
 	/* To scale from 0..255 -> 0..15 shift right by 4 bits */
-	const uint8_t msg[3] = {
-			SUB_ADDR_PWM0|static_cast<uint8_t>((_b >> 3) * _brightness * _max_brightness + 0.5f),
-			SUB_ADDR_PWM1|static_cast<uint8_t>((_b >> 3) * _brightness * _max_brightness + 0.5f),
-			SUB_ADDR_PWM2|static_cast<uint8_t>((_b >> 3) * _brightness * _max_brightness + 0.5f)
-			//SUB_ADDR_PWM0, static_cast<uint8_t>((_b >> 4) * _brightness * _max_brightness + 0.5f),
-		//SUB_ADDR_PWM1, static_cast<uint8_t>((_g >> 4) * _brightness * _max_brightness + 0.5f),
-		//SUB_ADDR_PWM2, static_cast<uint8_t>((_r >> 4) * _brightness * _max_brightness + 0.5f)
-	};
-	return transfer(msg, sizeof(msg), nullptr, 0);
+
+		const uint8_t msg0[1] = { 0x3d };
+		//const uint8_t msg4[1] = { 0xe0 };
+		//const uint8_t msg5[1] = { 0x00 };
+		const uint8_t msg1[1] = {
+				b
+				//static_cast<uint8_t>(SUB_ADDR_PWM0|static_cast<uint8_t>((_b >> 3) * _brightness * _max_brightness + 0.5f))
+				//SUB_ADDR_PWM0, static_cast<uint8_t>((_b >> 4) * _brightness * _max_brightness + 0.5f),
+			//SUB_ADDR_PWM1, static_cast<uint8_t>((_g >> 4) * _brightness * _max_brightness + 0.5f),
+			//SUB_ADDR_PWM2, static_cast<uint8_t>((_r >> 4) * _brightness * _max_brightness + 0.5f)
+		};
+
+		transfer(msg0, sizeof(msg0), nullptr, 0);
+		transfer(msg1, sizeof(msg1), nullptr, 0);
+		//transfer(msg4, sizeof(msg4), nullptr, 0);
+		warnx(" b #%u", b);
+		const uint8_t msg2[1] = {
+				g
+				//static_cast<uint8_t>(SUB_ADDR_PWM1|static_cast<uint8_t>((_g >> 3) * _brightness * _max_brightness + 0.5f))
+			};
+		//transfer(msg0, sizeof(msg0), nullptr, 0);
+		transfer(msg2, sizeof(msg2), nullptr, 0);
+		//transfer(msg4, sizeof(msg4), nullptr, 0);
+		warnx(" g #%u", g);
+		const uint8_t msg3[1] = {
+				r
+				//static_cast<uint8_t>(SUB_ADDR_PWM2|static_cast<uint8_t>((_r >> 3) * _brightness * _max_brightness + 0.5f))
+				};
+		//transfer(msg0, sizeof(msg0), nullptr, 0);
+	  return transfer(msg3, sizeof(msg3), nullptr, 0);
+	   warnx(" r #%u", r);
+	   //return transfer(msg5, sizeof(msg5), nullptr, 0);
+	   // transfer(msg4, sizeof(msg4), nullptr, 0);
+	  //const uint8_t msg4[1] = { 0xe0 };
+	 //  transfer(msg4, sizeof(msg4), nullptr, 0);
+	  // return transfer(msg0, sizeof(msg0), nullptr, 0);
+	//}
+	//else
+	//{
+		//const uint8_t msg5[1] = { 0x00 };
+	//return transfer(msg5, sizeof(msg5), nullptr, 0);
+	//}
 }//static_cast<uint8_t>((i >> 4) * (31f / 5f))
 //static_cast<uint8_t>((_b >> 3) * _brightness * _max_brightness + 0.5f
 
 
-int
-RGBLED::get(bool &on, bool &powersave, uint8_t &r, uint8_t &g, uint8_t &b)
-{
-	uint8_t result[2];
-	int ret;
+//int
+//RGBLED::get(bool &on, bool &powersave, uint8_t &r, uint8_t &g, uint8_t &b)
+//{
+	//uint8_t result[2];
+	//int ret;
 
-	ret = transfer(nullptr, 0, &result[0], 2);
-     //ret=0;
-	if (ret == OK) {
-		on = result[0] & SETTING_ENABLE;
-		powersave = !(result[0] & SETTING_NOT_POWERSAVE);
+	//ret=0;
+	//if (ret == OK) {
+		//on = result[0] & SETTING_ENABLE;
+		//powersave = !(result[0] & SETTING_NOT_POWERSAVE);
 		/* XXX check, looks wrong */
-		r = (result[0] & 0x0f) << 4;
-		g = (result[1] & 0xf0);
-		b = (result[1] & 0x0f) << 4;
-	}
+		//r = (result[0] & 0x0f) << 4;
+		//g = (result[1] & 0xf0);
+		//b = (result[1] & 0x0f) << 4;
+	//}
 
-	return ret;
-}//Since the NCP5623B is a receiver only
+	//return ret;
+//}
+//Since the NCP5623B is a receiver only
 
 void
 RGBLED::update_params()
@@ -650,7 +722,8 @@ rgbled_main(int argc, char *argv[])
 	while ((ch = px4_getopt(argc, argv, "a:b:", &myoptind, &myoptarg)) != EOF) {
 		switch (ch) {
 		case 'a':
-			rgbledadr =  (myoptarg, NULL, 0);
+			rgbledadr = strtol(myoptarg, NULL, 0);
+
 			break;
 
 		case 'b':
@@ -728,6 +801,8 @@ rgbled_main(int argc, char *argv[])
 	}
 
 	if (!strcmp(verb, "test")) {
+		// xjp
+		int i=0;
 		fd = px4_open(RGBLED0_DEVICE_PATH, 0);
 
 		if (fd == -1) {
@@ -740,9 +815,13 @@ rgbled_main(int argc, char *argv[])
 		};
 
 		ret = px4_ioctl(fd, RGBLED_SET_PATTERN, (unsigned long)&pattern);
+		warnx("i %d %d", i ,ret);
 		ret = px4_ioctl(fd, RGBLED_SET_MODE, (unsigned long)RGBLED_MODE_PATTERN);
-
+        i=i+1;
+        warnx("i %d %d", i,ret);
 		px4_close(fd);
+		i=i+1;
+		warnx("i %d", i);
 		return ret;
 	}
 

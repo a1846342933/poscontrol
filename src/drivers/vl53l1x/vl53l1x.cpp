@@ -30,12 +30,14 @@
 
 #include <board_config.h>
 
-
 /* Configuration Constants */
 #define VL53L1X_BUS_DEFAULT PX4_I2C_BUS_EXPANSION
 
 //#define VL53L1X_BASEADDR 0b0101001 // 7-bit address Ĭ�ϵ�ַ0x52实际上是01010010，b代表二进制 7位代表高位，最地位表示读写。
-#define VL53L1X_BASEADDR 0b0101000
+#define VL53L1X_BASEADDR 0b0101001
+#define VL53L1X_ADDR_1 0b0101010
+#define VL53L1X_ADDR_2 0b0101011
+#define VL53L1X_ADDR_3 0b0101100
 //#define VL53L1X_BASEADDR 0x70
 #define VL53L1X_DEVICE_PATH "/dev/vl53l1x"
 
@@ -74,9 +76,14 @@
 /*!<lld returned valid range but negative value ! */
 #define	 VL53L1_RANGESTATUS_NONE				255
 
-#define VL53L1X_US 1000 /*  1ms */
-#define VL53L1X_SAMPLE_RATE 50000 //50ms
+#define VL53L1X_US 2000 /*  1ms ,1000*/
+#define VL53L1X_SAMPLE_RATE 200000 //50ms,50000
 
+#define FXL6408ADD_L 0b1000011
+#define FXL6408ADD_H 0b1000100
+
+	uint16_t time_interval;//tested by fxk
+	uint16_t time_temp=0;//added by fxk
 
 //�Զ��庯������
 //ע������ǽṹ���ڵĺ������Ͳ��õ�������������ֱ��������Ӧͷ�ļ�VL53L1X.h����
@@ -130,6 +137,8 @@ private:
 	uint8_t saved_vhv_timeout;
 	uint16_t timeout_start_ms;
 
+
+
 	struct RangingData
 	{
 		uint16_t range_mm;
@@ -177,6 +186,7 @@ private:
 	uint16_t readReg16Bit(uint8_t address, uint16_t reg);
 	uint32_t readReg32Bit(uint8_t address, uint16_t reg);
 	bool sensorInit(uint8_t address, bool io_2v8);
+	void set_sensor_address(uint8_t new_addr);
 	void startContinuous(uint8_t address, uint32_t period_ms);
 	void stopContinuous(uint8_t address);
 	bool init(uint8_t address, bool io_2v8);
@@ -199,6 +209,10 @@ private:
 	bool checkTimeoutExpired(){return (io_timeout>0)&&((uint16_t)(hrt_absolute_time()/1000-timeout_start_ms)>io_timeout);}
 	bool dataReady(uint8_t address){return (readReg(address,VL53L1_GPIO__TIO_HV_STATUS)==0);}//该寄存器存储数据是否准备好？等于零表示已准备好。
 	float countRateFixedToFloat(uint16_t count_rate_fixed){return (float)count_rate_fixed/(1<<7);}
+
+	void set_io_direction(uint8_t value);
+	void set_output_state(uint8_t value);
+	void set_output_highz(uint8_t value);
 };
 
 extern "C" __EXPORT int vl53l1x_main(int argc, char *argv[]);
@@ -282,9 +296,6 @@ int	VL53L1X::init()
 		usleep(200000);
 		/* sensor is ok, but we don't really know if it is within range */
 		_sensor_ok = true;
-
-//		if(!sensorInit(_index_counter,true))
-//		{PX4_ERR("sensor init failed!!");}
 	out:
 		return ret;
 	}
@@ -370,7 +381,7 @@ int VL53L1X::ioctl(device::file_t *filp, int cmd, unsigned long arg)
 
 			}
 
-			start();
+			//start();
 			//warnx("start measure!!");
 			return OK;
 		}
@@ -454,21 +465,61 @@ int VL53L1X::probe()
 	//_index_counter =0b0101000;
 
 	//readReg(_index_counter,VL53L1_I2C_SLAVE__DEVICE_ADDRESS);
-	for(_index_counter=0b0000000;_index_counter<0b1000000;_index_counter++)
-		{	warnx("the index_counter value is:%02x",_index_counter);
-			warnx("the index_counter address is:%02x",readReg(_index_counter,VL53L1_I2C_SLAVE__DEVICE_ADDRESS));
-			warnx("the MODEL_ID register is:%02x",readReg(_index_counter,VL53L1_IDENTIFICATION__MODEL_ID));
-			warnx("=============================================");
-		}
-	writeReg(_index_counter,VL53L1_I2C_SLAVE__DEVICE_ADDRESS,0b0101000);
-	//_index_counter =0b0101001;
-	if (sensorInit(_index_counter, 1) == true) {
-//		while(1)
-//		{warnx("the time is:%010d",(int)hrt_absolute_time());
-//		usleep(1000000);}
-		return OK;
+//	for(_index_counter=0b0000000;_index_counter<0b1000000;_index_counter++)
+//		{	warnx("the index_counter value is:%02x",_index_counter);
+//			warnx("the index_counter address is:%02x",readReg(_index_counter,VL53L1_I2C_SLAVE__DEVICE_ADDRESS));
+//			warnx("the MODEL_ID register is:%02x",readReg(_index_counter,VL53L1_IDENTIFICATION__MODEL_ID));
+//			warnx("=============================================");
+//		}
+		/*=============多传感器初始化程序start====================*/
+	set_io_direction(0xFF);
+	set_output_state(0x00);
+	set_output_highz(0x00);
+	/*=====================第一片初始化操作=====================*/
+	set_output_state(0x01);//第一片使能
+	_index_counter=VL53L1X_BASEADDR;
+	if (!sensorInit(_index_counter, 1) == true)
+	{
+		warnx("SENSOR1 initialize fail!");
 	}
-
+	else
+	{
+		set_sensor_address(VL53L1X_ADDR_3);
+		PX4_INFO("SENSOR1 initialize successl! the address is:%02x",(int)VL53L1X_ADDR_3);
+	}
+	/*=====================第二片初始化操作=====================*/
+	set_output_state(0x03);//第二片使能
+	_index_counter=VL53L1X_BASEADDR;
+		if (!sensorInit(_index_counter, 1) == true)
+		{
+			warnx("SENSOR2 initialize fail!");
+		}
+		else
+		{
+			set_sensor_address(VL53L1X_ADDR_2);
+			PX4_INFO("SENSOR2 initialize successl! the address is:%02x",(int)VL53L1X_ADDR_2);
+		}
+	/*=====================第三片初始化操作=====================*/
+	set_output_state(0x07);//第三片使能
+	_index_counter=VL53L1X_BASEADDR;
+		if (!sensorInit(_index_counter, 1) == true)
+		{
+			warnx("SENSOR3 initialize fail!");
+		}
+		else
+		{
+			set_sensor_address(VL53L1X_ADDR_1);
+			PX4_INFO("SENSOR3 initialize successl! the address is:%02x",(int)VL53L1X_ADDR_1);
+		}
+	/*=====================第四片初始化操作=====================*/
+	set_output_state(0x0F);//第四片使能
+	_index_counter=VL53L1X_BASEADDR;
+	if (!sensorInit(_index_counter, 1) == true)
+		warnx("SENSOR4 initialize fail!");
+	else
+		PX4_INFO("SENSOR4 initialize successl! the address is:%02x",(int)VL53L1X_BASEADDR);
+		return OK;
+	/*====================多传感器初始化 end=======================================*/
 	// not found on any address
 	return -EIO;
 }
@@ -496,54 +547,54 @@ void VL53L1X::writeReg(uint8_t address, uint16_t reg, uint8_t value)
 // Write a 16-bit register
 void VL53L1X::writeReg16Bit(uint8_t address, uint16_t reg, uint16_t value)
 {
-		int ret=OK;
-		uint8_t reg_h=(reg>>8)&0xFF;
-		uint8_t reg_l=reg&0xFF;
-		uint8_t val[4];
-		set_address(address);
+	set_address(address);
+	int ret=OK;
+	uint8_t reg_h=(reg>>8)&0xFF;
+	uint8_t reg_l=reg&0xFF;
+	uint8_t val[4];
 //		transfer(&reg_h, 1, nullptr, 0);//高8位
 //		transfer(&reg_l, 1, nullptr, 0);//低8位
-		uint8_t value_h=(value>>8)&0xFF;
-		uint8_t value_l=(value)&0xFF;
+	uint8_t value_h=(value>>8)&0xFF;
+	uint8_t value_l=(value)&0xFF;
 //		transfer(&value_h, 1, nullptr, 0);
 //		transfer(&value_l, 1, nullptr, 0);
-		val[0]=reg_h;
-		val[1]=reg_l;
-		val[2]=value_h;
-		val[3]=value_l;
-		ret|=transfer(&val[0], 4, nullptr, 0);
-		if(ret!=OK)
-				PX4_ERR("writeReg16 fail!");
+	val[0]=reg_h;
+	val[1]=reg_l;
+	val[2]=value_h;
+	val[3]=value_l;
+	ret|=transfer(&val[0], 4, nullptr, 0);
+	if(ret!=OK)
+		PX4_ERR("writeReg16 fail!");
 }
 
 // Write a 32-bit register
 void VL53L1X::writeReg32Bit(uint8_t address, uint16_t reg, uint32_t value)
 {
-		int ret=OK;
-		uint8_t reg_h=(reg>>8)&0xFF;
-		uint8_t reg_l=reg&0xFF;
-		uint8_t val[6];
-		set_address(address);
+	set_address(address);
+	int ret=OK;
+	uint8_t reg_h=(reg>>8)&0xFF;
+	uint8_t reg_l=reg&0xFF;
+	uint8_t val[6];
 //		transfer(&reg_h, 1, nullptr, 0);//高8位
 //		transfer(&reg_l, 1, nullptr, 0);//低8位
-		uint8_t value_1=(value>>24)&0xFF;//25-32位
-		uint8_t value_2=(value>>16)&0xFF;//17-24位
-		uint8_t value_3=(value>>8)&0xFF;//9-16位
-		uint8_t value_4=value&0xFF;//1-8位
+	uint8_t value_1=(value>>24)&0xFF;//25-32位
+	uint8_t value_2=(value>>16)&0xFF;//17-24位
+	uint8_t value_3=(value>>8)&0xFF;//9-16位
+	uint8_t value_4=value&0xFF;//1-8位
 
 //		transfer(&value_1, 1, nullptr, 0);
 //		transfer(&value_2, 1, nullptr, 0);
 //		transfer(&value_3, 1, nullptr, 0);
 //		transfer(&value_4, 1, nullptr, 0);
-		val[0]=reg_h;
-		val[1]=reg_l;
-		val[2]=value_1;
-		val[3]=value_2;
-		val[4]=value_3;
-		val[5]=value_4;
-		ret|=transfer(&val[0], 6, nullptr, 0);
-		if(ret!=OK)
-				PX4_ERR("writeReg32 fail!");
+	val[0]=reg_h;
+	val[1]=reg_l;
+	val[2]=value_1;
+	val[3]=value_2;
+	val[4]=value_3;
+	val[5]=value_4;
+	ret|=transfer(&val[0], 6, nullptr, 0);
+	if(ret!=OK)
+		PX4_ERR("writeReg32 fail!");
 }
 
 
@@ -562,6 +613,8 @@ uint8_t VL53L1X::readReg(uint8_t address, uint16_t reg)//_index_counterΪ���
 	index_array[0]=reg_h;
 	index_array[1]=reg_l;
 	ret|=transfer(&index_array[0], 2, nullptr, 0);//高8位
+	if(ret!=OK)
+			PX4_ERR("readReg1 fail!");
 	//ret=transfer(&reg_l, 1, nullptr, 0);//低8位
 	//PX4_ERR("ret2=%d",ret);//by fxk
 //	if (OK != ret) {
@@ -576,7 +629,7 @@ uint8_t VL53L1X::readReg(uint8_t address, uint16_t reg)//_index_counterΪ���
 //		return ret;
 //	}
 	if(ret!=OK)
-			PX4_ERR("readReg fail!");
+			PX4_ERR("readReg2 fail!");
 	return value;
 }
 
@@ -719,9 +772,9 @@ bool VL53L1X::sensorInit(uint8_t address,bool io_2v8)
 
 	// store oscillator info for later use
 	fast_osc_frequency = readReg16Bit(address,VL53L1_OSC_MEASURED__FAST_OSC__FREQUENCY);
-	warnx("fast_osc_frequency is :%08d",fast_osc_frequency);
+	//warnx("fast_osc_frequency is :%08d",fast_osc_frequency);
 	osc_calibrate_val = readReg16Bit(address,VL53L1_RESULT__OSC_CALIBRATE_VAL);
-	warnx("osc_calibrate_val is:%08d",osc_calibrate_val);
+	//warnx("osc_calibrate_val is:%08d",osc_calibrate_val);
 	// VL53L1_DataInit() end
 
 	// VL53L1_StaticInit() begin
@@ -792,9 +845,9 @@ bool VL53L1X::sensorInit(uint8_t address,bool io_2v8)
 	// measurement is started; assumes MM1 and MM2 are disabled
 	writeReg16Bit(address,VL53L1_ALGO__PART_TO_PART_RANGE_OFFSET_MM,
 	readReg16Bit(address,VL53L1_MM_CONFIG__OUTER_OFFSET_MM) * 4);
-	setDistanceMode(_index_counter,Long);
-	setMeasurementTimingBudget(address, 50000);
-	startContinuous(address, 50);
+	setDistanceMode(address,Short);
+	setMeasurementTimingBudget(address, 200000);
+	startContinuous(address, 100);
 	return true;
 }
 uint16_t VL53L1X::readsensor(uint8_t address,bool blocking)
@@ -1185,21 +1238,30 @@ uint32_t VL53L1X::decodeTimeout(uint16_t reg_val)
   return ((uint32_t)(reg_val & 0xFF) << (reg_val >> 8)) + 1;
 }
 
+void VL53L1X::set_sensor_address(uint8_t new_addr)
+{
+	writeReg(VL53L1X_BASEADDR,VL53L1_I2C_SLAVE__DEVICE_ADDRESS,new_addr&0x7F);
+	set_address(new_addr);
+}
 
 void VL53L1X::cycle()
 {
-	collect();
-	work_queue(LPWORK,
-		&_work,
-		(worker_t)&VL53L1X::cycle_trampoline,
-		this,
-		_measure_ticks);
+	warnx("enter cycle");
+	int ret = collect();
+	if(ret !=OK)
+		warnx("collect error!!");
+	else
+	{
+		usleep(22000);
+		warnx("collect success!!");
+		work_queue(LPWORK,&_work,(worker_t)&VL53L1X::cycle_trampoline,this,USEC2TICK(VL53L1X_US));
+	}
 }
 
 void VL53L1X::cycle_trampoline(void *arg)
 {
 	VL53L1X *dev = (VL53L1X *)arg;
-
+	warnx("enter cycle_trampoline!");
 	dev->cycle();
 }
 
@@ -1212,9 +1274,10 @@ void VL53L1X::start()
 {
 	/* reset the report ring and state machine */
 	_reports->flush();
-
+	//test by fxk
+	warnx("start success!");
 	/* schedule a cycle to start things */
-	work_queue(LPWORK, &_work, (worker_t)&VL53L1X::cycle_trampoline, this, USEC2TICK(VL53L1X_US));
+	work_queue(LPWORK, &_work, (worker_t)&VL53L1X::cycle_trampoline, this, _measure_ticks);
 	
 }
 
@@ -1222,13 +1285,19 @@ void VL53L1X::start()
 int VL53L1X::collect()
 {
 	int ret = -EIO;
-	readsensor(_index_counter, false);
-	
+	_index_counter=VL53L1X_ADDR_3;
+	for(int i=0;i<4;i++)//4
+	{
+		report.distance[i]=readsensor(_index_counter, false);
+		 //report.distance[i]= ranging_data.range_mm;
+		_index_counter--;
+	}
+
 	report.timestamp = hrt_absolute_time();
+	time_interval=report.timestamp-time_temp;
+	time_temp=report.timestamp;
 	report.type = distance_sensor_s::MAV_DISTANCE_SENSOR_LASER;
 	//report.orientation = _rotation;
-
-	report.current_distance = ranging_data.range_mm;
 	report.min_distance = 0.0f;
 	report.max_distance = 4.0f;
 	report.covariance = 0.0f;
@@ -1254,6 +1323,40 @@ int VL53L1X::collect()
 
 	return ret;
 }
+
+void VL53L1X::set_io_direction(uint8_t value)
+{
+	int ret=OK;
+	set_address(FXL6408ADD_H);
+	uint8_t val[2];
+	val[0]=0x03;
+	val[1]=value;
+	ret|=transfer(&val[0], 2, nullptr, 0);
+	if(ret!=OK)
+		PX4_ERR("set_io_derection fail!");
+	}
+void VL53L1X::set_output_state(uint8_t value)
+{
+	int ret=OK;
+	set_address(FXL6408ADD_H);
+	uint8_t val[2];
+	val[0]=0x05;
+	val[1]=value;
+	ret|=transfer(&val[0], 2, nullptr, 0);
+	if(ret!=OK)
+		PX4_ERR("set_output_state fail!");
+	}
+void VL53L1X::set_output_highz(uint8_t value)
+{
+	int ret=OK;
+	set_address(FXL6408ADD_H);
+	uint8_t val[2];
+	val[0]=0x07;
+	val[1]=value;
+	ret|=transfer(&val[0], 2, nullptr, 0);
+	if(ret!=OK)
+		PX4_ERR("set_output_highz fail!");
+	}
 
 /**
 * Local functions in support of the shell command.
@@ -1290,9 +1393,9 @@ namespace vl53l1x
 		//for (unsigned i = 0; i < NUM_I2C_BUS_OPTIONS; i++) {
 			if (start_bus() == PX4_OK)
 			{
-				return PX4_OK;
 				PX4_INFO("start_bus success!!");
 				PX4_ERR("g_dev start!!!!!");
+				return PX4_OK;
 			}
 			else
 				PX4_ERR("start_bus fail!!");
@@ -1339,12 +1442,16 @@ namespace vl53l1x
 			PX4_ERR("fd open fail!!");
 			goto fail;
 		}
-
+		//test by fxk
+		else
+			warnx("px4_open success");
 		if (ioctl(fd, SENSORIOCSPOLLRATE, SENSOR_POLLRATE_DEFAULT) < 0) {
 			PX4_ERR("g_dev ioctl fail!!");
 			goto fail;
 		}
-
+		//test by fxk
+		else
+			warnx("ioctl success");
 		px4_close(fd);
 		return PX4_OK;
 
@@ -1435,7 +1542,11 @@ namespace vl53l1x
 		while(1)
 		{
 			orb_copy(ORB_ID(distance_sensor), distance_sensor_sub, &distance);
-			warnx("current distance = %.3fm",(double)distance.current_distance/1000);
+			warnx("current time interval = %d",(int)time_interval);
+			warnx("current distance_1 = %.3fm",(double)distance.distance[0]/1000);
+			warnx("current distance_2 = %.3fm",(double)distance.distance[1]/1000);
+			warnx("current distance_3 = %.3fm",(double)distance.distance[2]/1000);
+			warnx("current distance_4 = %.3fm",(double)distance.distance[3]/1000);
 			warnx("max distance = %.2f\tmin distance = %.2f",(double)distance.max_distance,(double)distance.min_distance);
 			//warnx("covariance = %f",(double)distance.covariance);
 			warnx("============press CTRL+C to abort============");
@@ -1455,7 +1566,7 @@ namespace vl53l1x
 			        	  break;
 			          }
 			       }
-			          usleep(800000);
+			          usleep(800000);//800000
 		}
 
 		return PX4_OK;

@@ -3117,8 +3117,8 @@ PARAM_DEFINE_INT32(SENS_EN_MB12XX, 0);
  * @boolean
  * @group Sensor Enable
  */
-PARAM_DEFINE_INT32(SENS_EN_VL53L1X, 0);
-
+PARAM_DEFINE_INT32(SENS_EN_VL53L1X, 1);
+//by fxk
 /**
  * TeraRanger One (trone)
  *

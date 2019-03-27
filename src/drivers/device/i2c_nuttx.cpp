@@ -153,6 +153,7 @@ I2C::init()
 	if (ret != OK) {
 		DEVICE_DEBUG("probe failed");
 		PX4_ERR("failed to init I2C_3");
+		PX4_ERR("the i2c bus is %d",_bus);
 		goto out;
 	}
 
