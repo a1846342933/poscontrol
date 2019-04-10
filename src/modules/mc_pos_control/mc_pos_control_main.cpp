@@ -2669,23 +2669,23 @@ int mc_pos_control_main(int argc, char *argv[])
 						//printf("flag_auto=%d\n",flag_auto);
 				//	}
 				//}
-				warnx("============press CTRL+C to abort============");
-
-				char c;
-				struct pollfd fds;
-				int ret;
-				fds.fd=0;
-				fds.events=POLLIN;
-				ret=poll(&fds,1,0);
-				if(ret>0)
-				{
-					read(0,&c,1);
-					if(c==0x03||c==0x63||c=='q')
-					{
-						warnx("User abort\n");
-						break;
-					}
-				}
+//				warnx("============press CTRL+C to abort============");
+//
+//				char c;
+//				struct pollfd fds;
+//				int ret;
+//				fds.fd=0;
+//				fds.events=POLLIN;
+//				ret=poll(&fds,1,0);
+//				if(ret>0)
+//				{
+//					read(0,&c,1);
+//					if(c==0x03||c==0x63||c=='q')
+//					{
+//						warnx("User abort\n");
+//						break;
+//					}
+//				}
 				usleep(800000);		//500ms
 			}
 

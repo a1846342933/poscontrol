@@ -179,19 +179,19 @@ int px4_simple_app_main(int argc, char *argv[]) {
 				printf("=========Press CTRL+C to abort=========\n");
 			}
 		}
-		char c;
-		struct pollfd fds1;
-		int ret;
-		fds1.fd = 0;
-		fds1.events = POLLIN;
-		ret = poll(&fds1, 1, 0);
-		if (ret > 0) {
-			read(0, &c, 1);
-			if (c == 0x03 || c == 0x63 || c == 'q') {
-				warnx("User abort\n");
-				break;
-			}
-		}
+//		char c;
+//		struct pollfd fds1;
+//		int ret;
+//		fds1.fd = 0;
+//		fds1.events = POLLIN;
+//		ret = poll(&fds1, 1, 0);
+//		if (ret > 0) {
+//			read(0, &c, 1);
+//			if (c == 0x03 || c == 0x63 || c == 'q') {
+//				warnx("User abort\n");
+//				break;
+//			}
+//		}
 		usleep(400000);
 	}
 

@@ -124,6 +124,7 @@ set(msg_file_names
 	sonar_distance.msg
 	alt_estimate.msg
 	ekf_localization.msg
+	ukf_localization.msg
 	#alt_ctrl.msg
 	)
 

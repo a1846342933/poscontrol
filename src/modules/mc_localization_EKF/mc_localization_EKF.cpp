@@ -238,6 +238,7 @@ float Intersection(POINTF p1, POINTF p2, POINTF p3, POINTF p4,
 	return 1;
 }
 
+//判断超声波射线与墙面相交的最小值
 void sonar_value_minimum(POINTF location, float yaw,
 		math::Matrix<4, 10> &sonar_map_label,
 		math::Matrix<4, 1> &distance_theory_minimum, float ray_angle[],
@@ -361,7 +362,7 @@ void sonar_value_minimum(POINTF location, float yaw,
 													- location.y));
 
 					if (_distance_theory[i] > _distance_theory_temp) {
-						//当有交点时开始赋值相应数据
+						//当有交点时开始赋值相应数据,并选取最小的距离
 						//i表示第i个超声波
 						sonar_map_label(i, 0) = j;					//第j根射线
 						sonar_map_label(i, 1) = _sonar_start_point.x;//第j根射线起始位置X坐标

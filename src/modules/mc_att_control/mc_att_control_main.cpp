@@ -1091,20 +1091,20 @@ int mc_att_control_main(int argc, char *argv[]) {
 			while (1) {
 //				printf("[att_q] time = %lld \n", dT);
 //				printf("[ATT] att0 = %.2f, att1 = %.2f, att2 = %.2f, att3 = %.2f,\n ",att_control[0],att_control[1],att_control[2],att_control[3]);
-				printf("==============press CTRL+C to abort==============\n");
-				char c;
-				struct pollfd fds;
-				int ret;
-				fds.fd = 0;
-				fds.events = POLLIN;
-				ret = poll(&fds, 1, 0);
-				if (ret > 0) {
-					read(0, &c, 1);
-					if (c == 0x03 || c == 0x63 || c == 'q') {
-						warnx("User abort\n");
-						break;
-					}
-				}
+//				printf("==============press CTRL+C to abort==============\n");
+//				char c;
+//				struct pollfd fds;
+//				int ret;
+//				fds.fd = 0;
+//				fds.events = POLLIN;
+//				ret = poll(&fds, 1, 0);
+//				if (ret > 0) {
+//					read(0, &c, 1);
+//					if (c == 0x03 || c == 0x63 || c == 'q') {
+//						warnx("User abort\n");
+//						break;
+//					}
+//				}
 				usleep(400000);		//500ms
 			}
 			warnx("running");
