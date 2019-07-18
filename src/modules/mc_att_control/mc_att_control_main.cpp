@@ -664,23 +664,23 @@ void MulticopterAttitudeControl::control_attitude(float dt) {
 	math::Vector<3> e_R = R.transposed() * (R_z % R_sp_z);
 
 	/* calculate angle error */
-	float e_R_z_sin = e_R.length();
-	float e_R_z_cos = R_z * R_sp_z;
+	float e_R_z_sin = e_R.length();//叉乘为sin
+	float e_R_z_cos = R_z * R_sp_z;//点乘为cos
 
 	/* calculate weight for yaw control */
-	float yaw_w = R_sp(2, 2) * R_sp(2, 2);
-
-	/* calculate rotation matrix after roll/pitch only rotation */
+	float yaw_w = R_sp(2, 2) * R_sp(2, 2);//计算yaw的权重
+//=================================计算roll/pitch的旋转矩阵===================================
+	/* calculate rotation matrix after roll/pitch only rotation 将roll/pitch与yaw解耦*/
 	math::Matrix<3, 3> R_rp;
 
-	if (e_R_z_sin > 0.0f) {
+	if (e_R_z_sin > 0.0f) {//如果当前姿态与期望姿态有偏差
 		/* get axis-angle representation */
-		float e_R_z_angle = atan2f(e_R_z_sin, e_R_z_cos);
-		math::Vector<3> e_R_z_axis = e_R / e_R_z_sin;
+		float e_R_z_angle = atan2f(e_R_z_sin, e_R_z_cos);//反正切求出误差角度
+		math::Vector<3> e_R_z_axis = e_R / e_R_z_sin;//归一化？？
 
 		e_R = e_R_z_axis * e_R_z_angle;
 
-		/* cross product matrix for e_R_axis */
+		/* cross product matrix for e_R_axis 饶e_R_axis轴的叉乘矩阵*/
 		math::Matrix<3, 3> e_R_cp;
 		e_R_cp.zero();
 		e_R_cp(0, 1) = -e_R_z_axis(2);
@@ -690,16 +690,17 @@ void MulticopterAttitudeControl::control_attitude(float dt) {
 		e_R_cp(2, 0) = -e_R_z_axis(1);
 		e_R_cp(2, 1) = e_R_z_axis(0);
 
-		/* rotation matrix for roll/pitch only rotation */
+		/* rotation matrix for roll/pitch only rotation 罗德里格旋转*/
 		R_rp = R
 				* (_I + e_R_cp * e_R_z_sin
 						+ e_R_cp * e_R_cp * (1.0f - e_R_z_cos));
 
 	} else {
+		//当前姿态与期望姿态一致，则不进行旋转
 		/* zero roll/pitch rotation */
 		R_rp = R;
 	}
-
+//=========================计算yaw的旋转矩阵，与roll/yaw方法相同===================================
 	/* R_rp and R_sp has the same Z axis, calculate yaw error */
 	math::Vector<3> R_sp_x(R_sp(0, 0), R_sp(1, 0), R_sp(2, 0));
 	math::Vector<3> R_rp_x(R_rp(0, 0), R_rp(1, 0), R_rp(2, 0));
@@ -709,18 +710,18 @@ void MulticopterAttitudeControl::control_attitude(float dt) {
 		/* for large thrust vector rotations use another rotation method:
 		 * calculate angle and axis for R -> R_sp rotation directly */
 		math::Quaternion q_error;
-		q_error.from_dcm(R.transposed() * R_sp);
+		q_error.from_dcm(R.transposed() * R_sp);//由旋转矩阵获取四元数
 		math::Vector<3> e_R_d =
 				q_error(0) >= 0.0f ?
-						q_error.imag() * 2.0f : -q_error.imag() * 2.0f;
+						q_error.imag() * 2.0f : -q_error.imag() * 2.0f;//.imag四元数虚部
 
 		/* use fusion of Z axis based rotation and direct rotation */
-		float direct_w = e_R_z_cos * e_R_z_cos * yaw_w;
-		e_R = e_R * (1.0f - direct_w) + e_R_d * direct_w;
+		float direct_w = e_R_z_cos * e_R_z_cos * yaw_w;//互补系数
+		e_R = e_R * (1.0f - direct_w) + e_R_d * direct_w;//互补方式求e_R
 	}
 
 	/* calculate angular rates setpoint */
-	_rates_sp = _params.att_p.emult(e_R);
+	_rates_sp = _params.att_p.emult(e_R);//矩阵乘法计算角速度
 
 	/* limit rates */
 	for (int i = 0; i < 3; i++) {
@@ -729,14 +730,14 @@ void MulticopterAttitudeControl::control_attitude(float dt) {
 				&& !_v_control_mode.flag_control_manual_enabled) {
 			_rates_sp(i) = math::constrain(_rates_sp(i),
 					-_params.auto_rate_max(i), _params.auto_rate_max(i));
-
+//对期望速度进行限制
 		} else {
 			_rates_sp(i) = math::constrain(_rates_sp(i),
 					-_params.mc_rate_max(i), _params.mc_rate_max(i));
 		}
 	}
 
-	/* feed forward yaw setpoint rate */
+	/* feed forward yaw setpoint rate 偏航角前馈控制？*/
 	_rates_sp(2) += _v_att_sp.yaw_sp_move_rate * yaw_w * _params.yaw_ff;
 
 	/* weather-vane mode, dampen yaw rate */
@@ -780,14 +781,14 @@ void MulticopterAttitudeControl::control_attitude_rates(float dt) {
 
 	/* angular rates error */
 	math::Vector<3> rates_err = _rates_sp - rates;
-
+//速度控制PD+前馈?这里没有对I环节进行控制，但是_rates_int包含了角速度积分误差，后面会加上，对应执行器的控制
 	_att_control = _params.rate_p.emult(rates_err * tpa)
 			+ _params.rate_d.emult(_rates_prev - rates) / dt + _rates_int
 			+ _params.rate_ff.emult(_rates_sp);
 
 	_rates_sp_prev = _rates_sp;
 	_rates_prev = rates;
-
+//加上积分控制I环节，只有在没有达到极限 且 电机命令不饱和时才更新积分环节  isfinite函数：检查元素是否有界（是否无穷大/小）
 	/* update integral only if not saturated on low limit and if motor commands are not saturated */
 	if (_thrust_sp > MIN_TAKEOFF_THRUST && !_motor_limits.lower_limit
 			&& !_motor_limits.upper_limit) {
@@ -993,7 +994,7 @@ void MulticopterAttitudeControl::task_main() {
 //						att_control[1] = _actuators.control[1];
 //						att_control[2] = _actuators.control[2];
 //						att_control[3] = _actuators.control[3];
-
+//发布执行器状态
 						orb_publish(_actuators_id, _actuators_0_pub,
 								&_actuators);
 						perf_end(_controller_latency_perf);
@@ -1004,7 +1005,7 @@ void MulticopterAttitudeControl::task_main() {
 					}
 
 				}
-
+//发布控制器的积分（注意只有积分）状态
 				/* publish controller status */
 				if (_controller_status_pub != nullptr) {
 					orb_publish(ORB_ID(mc_att_ctrl_status),

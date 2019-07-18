@@ -68,6 +68,7 @@
 #include <mathlib/math/filter/LowPassFilter2p.hpp>
 #include <platforms/px4_defines.h>
 
+
 static uint64_t IMUusec = 0;
 
 //Constants
@@ -908,6 +909,7 @@ void AttitudePositionEstimatorEKF::publishControlState()
 	_ctrl_state.roll_rate = _LP_att_P.apply(_ekf->dAngIMU.x / _ekf->dtIMU) - _ekf->states[10] / _ekf->dtIMUfilt;
 	_ctrl_state.pitch_rate = _LP_att_Q.apply(_ekf->dAngIMU.y / _ekf->dtIMU) - _ekf->states[11] / _ekf->dtIMUfilt;
 	_ctrl_state.yaw_rate = _LP_att_R.apply(_ekf->dAngIMU.z / _ekf->dtIMU) - _ekf->states[12] / _ekf->dtIMUfilt;
+
 
 	/* Guard from bad data */
 	if (!PX4_ISFINITE(_ctrl_state.x_vel) ||

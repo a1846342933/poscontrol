@@ -945,6 +945,7 @@ then
 
 	fi
 
+
 # End of autostart
 fi
 
@@ -965,4 +966,4 @@ mavlink start -r 20000 -m config -b 921600 -d /dev/ttyS2
  sonargroup_service start
 # mc_alt_estimator start
 # mavlink stream -r 50 -s SONARGROUP -u 14556
-# mc_localization_EKF start
+ mc_localization_UKF start

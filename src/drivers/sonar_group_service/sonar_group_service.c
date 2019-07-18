@@ -195,9 +195,10 @@ int sonargroup_service_thread_main(int argc, char *argv[])
     {
     	if(sonar_flag[0])
     	    	{
-    	    		SRF01(uart_fd,1,RANGE_CM);
+    		//啦啦啦
+    	    		SRF01(uart_fd,4,RANGE_CM);
     	    		//wait 70ms to recive the respons
-    	    		//usleep(20000);		//10000
+    	    		usleep(20000);		//10000
     	    	}
     	if(sonar_flag[1])
     	{
@@ -228,8 +229,8 @@ int sonargroup_service_thread_main(int argc, char *argv[])
 
 		usleep(50000);		// 50000
 
-//        sonar.count++;
-
+		//        sonar.count++;
+		//========四周超声波============
 //		for (int i=2;i<=5;i++)
 //		{
 //			int range=GetRange_new(uart_fd,i);
@@ -245,7 +246,8 @@ int sonargroup_service_thread_main(int argc, char *argv[])
 //			}
 //		}
 
-		int range=GetRange_new(uart_fd,1);
+		//lalalalala
+		int range=GetRange_new(uart_fd,4);
 		if (range!=-1979)
 							{
 								sonar.distance[0]=range;
@@ -260,6 +262,7 @@ int sonargroup_service_thread_main(int argc, char *argv[])
 //		sonar.distance[0] = 20;
 //		sonar.status[0] = 1;
 
+		//=============滤波=================================
 		sonar.distance_down[3] = sonar.distance_down[2];
 		sonar.distance_down[2] = sonar.distance_down[1];
 		sonar.distance_down[1] = sonar.distance_down[0];
@@ -421,6 +424,7 @@ int sonargroup_service_thread_main(int argc, char *argv[])
 //    fflush(stdout);
 //    return 0;
 //}
+
 // Function to send commands to the SRF01
 void SRF01(int fd_UART,unsigned char Address,unsigned char cmd)
 {

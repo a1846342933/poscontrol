@@ -87,7 +87,6 @@
 
 extern "C" __EXPORT int ekf2_main(int argc, char *argv[]);
 
-
 class Ekf2;
 
 namespace ekf2

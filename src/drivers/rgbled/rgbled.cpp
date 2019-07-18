@@ -38,6 +38,7 @@
  *
  * @author Julian Oes <julian@px4.io>
  * @author Anton Babushkin <anton.babushkin@me.com>
+ * asdfghhhhhhh
  */
 
 #include <px4_config.h>
@@ -68,7 +69,8 @@
 #define RGBLED_ONTIME 120
 #define RGBLED_OFFTIME 120
 
-#define ADDR			PX4_I2C_OBDEV_LED	/**< I2C adress of TCA62724FMG *///0x38
+#define ADDR			    0x38
+#define PX4_I2C_OBDEV_LED	0x38/**< I2C adress of TCA62724FMG *///0x38
 #define SUB_ADDR_START		0x58//or 0x57 0x01	/**< write everything (with auto-increment) */
 #define SUB_ADDR_PWM0		0x40	/**< blue     (without auto-increment) */
 #define SUB_ADDR_PWM1		0x60//82	/**< green    (without auto-increment) */
@@ -82,6 +84,7 @@
 class RGBLED : public device::I2C
 {
 public:
+
 	RGBLED(int bus, int rgbled);
 	virtual ~RGBLED();
 
@@ -108,7 +111,8 @@ private:
 		bool			_should_run;
 		int			_counter;
 		int			_param_sub;
-		//int     switchx;
+
+
 
 
 	void 			set_color(rgbled_color_t ledcolor);
@@ -196,20 +200,16 @@ RGBLED::probe()
 	   RGBLED is on the bus.
 	 */
 
-	unsigned prevretries = _retries;
-	_retries = 4;
+	//unsigned prevretries = _retries;
+	_retries = 5;
 	if (
 		    (ret = send_led_enable(false) != OK) ||
 		    (ret = send_led_enable(false) != OK)) {
 			return ret;
 		}
-	//if ((ret = get(on, powersave, r, g, b)) != OK ||
-	 //   (ret = send_led_enable(false) != OK) ||
-	    //(ret = send_led_enable(false) != OK)) {
-		//return ret;}
+
 	//Since the NCP5623B is a receiver only
 
-	_retries = prevretries;
 
 	return ret;
 }
@@ -326,14 +326,13 @@ RGBLED::led()
         //send_led_enable(_counter == 0);
 		//send_led_rgb();
 		if(_counter == 0){
-			_brightness=1;
+			_brightness=1.0f;
 		}
 		else{
-			_brightness=0;
+			_brightness=0.0f;
 		}
-		//send_led_enable(_counter == 0);
+		//send_led_enable(true);
 		send_led_rgb();
-
 		break;
 
 	case RGBLED_MODE_BREATHE:
@@ -496,6 +495,7 @@ RGBLED::set_mode(rgbled_mode_t mode)
 			break;
 
 		case RGBLED_MODE_ON:
+			//_should_run = true;
 			_brightness = 1.0f;
              send_led_rgb();
 			send_led_enable(true);
@@ -570,34 +570,24 @@ RGBLED::set_pattern(rgbled_pattern_t *pattern)
  */
 int
 RGBLED::send_led_enable(bool enable)
-{
-	uint8_t settings_byte = 0x01;
+{//uint8_t settings_byte = 0x00;
+	int ret=1;
+	uint8_t off=0x3a;
+	uint8_t g=0x39;
+	//int i=0;
+	const uint8_t msg2[1] = {g};
+	const uint8_t msg4[1] = {off };
+	//while(ret!=0&&i<=10)
+	ret=transfer(msg4, sizeof(msg4), nullptr, 0);
+
 
 	if (enable) {
-		settings_byte |= SETTING_ENABLE; //0x680x68
-		//settings_byte = 0x68;
-		//const uint8_t msg[1] = {settings_byte};
-		//return transfer(msg, sizeof(msg), nullptr, 0);
-	}
-	//else
-	settings_byte |= SETTING_NOT_POWERSAVE;/*¹Ø±Õpowersave */ //0x00
-	//switchx=1;
-		//const uint8_t msg0[1] = {0x3d};
-   // const uint8_t msg1[1] = {0x40};
-   // const uint8_t msg2[1] = {0x60};
-    //const uint8_t msg3[1] = {0x80};
-    //transfer(msg0, sizeof(msg0), nullptr, 0);
-    //transfer(msg1, sizeof(msg1), nullptr, 0);
-    //transfer(msg2, sizeof(msg2), nullptr, 0);
-	const uint8_t msg1[1] = {settings_byte};
-	//return transfer(msg, sizeof(msg), nullptr, 0);
-	//if (!enable) {
-			//switchx=0;  //0x68
-		//}
 
-	  //transfer(msg1, sizeof(msg1), nullptr, 0);
-	  transfer(msg1, sizeof(msg1), nullptr, 0);
-	  return transfer(msg1, sizeof(msg1), nullptr, 0);
+		ret=transfer(msg2, sizeof(msg2), nullptr, 0);
+
+	}
+
+	  return ret;
 }
 
 /**
@@ -605,57 +595,49 @@ RGBLED::send_led_enable(bool enable)
  */
 int
 RGBLED::send_led_rgb()
-{
-	//if(switchx==1)
-//{
-
+{  // uint8_t filed=0x3b;
+	uint8_t iled=0x3d;
+    int ret=100;
+   // int i=0;
 	uint8_t r,g,b;
    b=static_cast<uint8_t>(SUB_ADDR_PWM0|static_cast<uint8_t>((_b >> 3) * _brightness * _max_brightness + 0.5f));
    g=static_cast<uint8_t>(SUB_ADDR_PWM1|static_cast<uint8_t>((_g >> 3) * _brightness * _max_brightness + 0.5f));
    r=static_cast<uint8_t>(SUB_ADDR_PWM2|static_cast<uint8_t>((_r >> 3) * _brightness * _max_brightness + 0.5f));
 	/* To scale from 0..255 -> 0..15 shift right by 4 bits */
+        //const uint8_t msg9[1] = { 0x00 };
+        //ret=transfer(msg9, sizeof(msg9), nullptr, 0);
+        	  	  	//  warnx(" 00 #%d", ret);
+       //const uint8_t msg4[1] = {filed};
+      // ret=transfer(msg4, sizeof(msg4), nullptr, 0);
 
-		const uint8_t msg0[1] = { 0x3d };
-		//const uint8_t msg4[1] = { 0xe0 };
-		//const uint8_t msg5[1] = { 0x00 };
-		const uint8_t msg1[1] = {
-				b
-				//static_cast<uint8_t>(SUB_ADDR_PWM0|static_cast<uint8_t>((_b >> 3) * _brightness * _max_brightness + 0.5f))
-				//SUB_ADDR_PWM0, static_cast<uint8_t>((_b >> 4) * _brightness * _max_brightness + 0.5f),
-			//SUB_ADDR_PWM1, static_cast<uint8_t>((_g >> 4) * _brightness * _max_brightness + 0.5f),
-			//SUB_ADDR_PWM2, static_cast<uint8_t>((_r >> 4) * _brightness * _max_brightness + 0.5f)
-		};
+        const uint8_t msg0[1] = {iled};
+		const uint8_t msg1[1] = {b};
+		ret=transfer(msg0, sizeof(msg0), nullptr, 0);
 
-		transfer(msg0, sizeof(msg0), nullptr, 0);
-		transfer(msg1, sizeof(msg1), nullptr, 0);
+		ret=transfer(msg1, sizeof(msg1), nullptr, 0);
+
+		//ret=transfer(msg0, sizeof(msg0), nullptr, 0);
+		//warnx(" 3d #%d", ret);
 		//transfer(msg4, sizeof(msg4), nullptr, 0);
-		warnx(" b #%u", b);
+
 		const uint8_t msg2[1] = {
 				g
 				//static_cast<uint8_t>(SUB_ADDR_PWM1|static_cast<uint8_t>((_g >> 3) * _brightness * _max_brightness + 0.5f))
 			};
-		//transfer(msg0, sizeof(msg0), nullptr, 0);
-		transfer(msg2, sizeof(msg2), nullptr, 0);
-		//transfer(msg4, sizeof(msg4), nullptr, 0);
-		warnx(" g #%u", g);
+
+		ret=transfer(msg2, sizeof(msg2), nullptr, 0);
+
+		//warnx(" g #%u %d %d", g,i,ret);
 		const uint8_t msg3[1] = {
 				r
 				//static_cast<uint8_t>(SUB_ADDR_PWM2|static_cast<uint8_t>((_r >> 3) * _brightness * _max_brightness + 0.5f))
 				};
-		//transfer(msg0, sizeof(msg0), nullptr, 0);
-	  return transfer(msg3, sizeof(msg3), nullptr, 0);
-	   warnx(" r #%u", r);
-	   //return transfer(msg5, sizeof(msg5), nullptr, 0);
-	   // transfer(msg4, sizeof(msg4), nullptr, 0);
-	  //const uint8_t msg4[1] = { 0xe0 };
-	 //  transfer(msg4, sizeof(msg4), nullptr, 0);
-	  // return transfer(msg0, sizeof(msg0), nullptr, 0);
-	//}
-	//else
-	//{
-		//const uint8_t msg5[1] = { 0x00 };
-	//return transfer(msg5, sizeof(msg5), nullptr, 0);
-	//}
+		//ret=transfer(msg0, sizeof(msg0), nullptr, 0);
+		//warnx(" 3d #%d", ret);
+	  ret=transfer(msg3, sizeof(msg3), nullptr, 0);
+	  //warnx(" r #%d", ret);
+
+	  return ret;
 }//static_cast<uint8_t>((i >> 4) * (31f / 5f))
 //static_cast<uint8_t>((_b >> 3) * _brightness * _max_brightness + 0.5f
 
@@ -712,13 +694,11 @@ rgbled_main(int argc, char *argv[])
 {
 	int i2cdevice = -1;
 	int rgbledadr = ADDR; /* 7bit */
-
 	int ch;
 
 	/* jump over start/off/etc and look at options first */
 	int myoptind = 1;
 	const char *myoptarg = NULL;
-
 	while ((ch = px4_getopt(argc, argv, "a:b:", &myoptind, &myoptarg)) != EOF) {
 		switch (ch) {
 		case 'a':
@@ -754,7 +734,7 @@ rgbled_main(int argc, char *argv[])
 
 		if (i2cdevice == -1) {
 			// try the external bus first
-			i2cdevice = PX4_I2C_BUS_EXPANSION;
+			i2cdevice = PX4_I2C_BUS_EXPANSION;//1
 			g_rgbled = new RGBLED(PX4_I2C_BUS_EXPANSION, rgbledadr);  //zhushi by fxk
 			//g_rgbled = new RGBLED(2, rgbledadr);
 
@@ -789,7 +769,6 @@ rgbled_main(int argc, char *argv[])
 				return 1;
 			}
 		}
-
 		return 0;
 	}
 
@@ -852,6 +831,8 @@ rgbled_main(int argc, char *argv[])
 	}
 
 	if (!strcmp(verb, "rgb")) {
+		//xjp
+		int x;
 		if (argc < 5) {
 			warnx("Usage: rgbled rgb <red> <green> <blue>");
 			return 1;
@@ -870,7 +851,9 @@ rgbled_main(int argc, char *argv[])
 		v.blue  = strtol(argv[4], NULL, 0);
 		ret = px4_ioctl(fd, RGBLED_SET_RGB, (unsigned long)&v);
 		ret = px4_ioctl(fd, RGBLED_SET_MODE, (unsigned long)RGBLED_MODE_ON);
-		px4_close(fd);
+
+		x=px4_close(fd);
+		warnx("x=px4_close %d",x);
 		return ret;
 	}
 

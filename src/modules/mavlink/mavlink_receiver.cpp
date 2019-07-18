@@ -88,6 +88,7 @@
 
 static const float mg2ms2 = CONSTANTS_ONE_G / 1000.0f;
 
+
 MavlinkReceiver::MavlinkReceiver(Mavlink *parent) :
 	_mavlink(parent),
 	status{},

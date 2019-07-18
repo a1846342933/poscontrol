@@ -488,7 +488,7 @@ int VL53L1X::probe()
 		PX4_INFO("SENSOR1 initialize successl! the address is:%02x",(int)VL53L1X_ADDR_3);
 	}
 	/*=====================第二片初始化操作=====================*/
-	set_output_state(0x03);//第二片使能
+	set_output_state(0x09);//第二片使能
 	_index_counter=VL53L1X_BASEADDR;
 		if (!sensorInit(_index_counter, 1) == true)
 		{
@@ -500,7 +500,7 @@ int VL53L1X::probe()
 			PX4_INFO("SENSOR2 initialize successl! the address is:%02x",(int)VL53L1X_ADDR_2);
 		}
 	/*=====================第三片初始化操作=====================*/
-	set_output_state(0x07);//第三片使能
+	set_output_state(0x0D);//第三片使能
 	_index_counter=VL53L1X_BASEADDR;
 		if (!sensorInit(_index_counter, 1) == true)
 		{
@@ -845,7 +845,7 @@ bool VL53L1X::sensorInit(uint8_t address,bool io_2v8)
 	// measurement is started; assumes MM1 and MM2 are disabled
 	writeReg16Bit(address,VL53L1_ALGO__PART_TO_PART_RANGE_OFFSET_MM,
 	readReg16Bit(address,VL53L1_MM_CONFIG__OUTER_OFFSET_MM) * 4);
-	setDistanceMode(address,Short);
+	setDistanceMode(address,Long);
 	setMeasurementTimingBudget(address, 200000);
 	startContinuous(address, 100);
 	return true;

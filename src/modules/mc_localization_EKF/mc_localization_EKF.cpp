@@ -451,98 +451,98 @@ int task_main(int argc, char *argv[]) {
 
 // Load the prior map，加载地图模型
 
-	if (MAP_NUMBER_SET == 4) {
-		//4维的地图
-		auto map_data_boundary_x = std::initializer_list<float>(
-				{ 0.00, 6, 6, 0 });
-		std::copy(map_data_boundary_x.begin(), map_data_boundary_x.end(),
-				_map_test.x);
-		auto map_data_boundary_y = std::initializer_list<float>( { 0.00, 0.00,
-				7.5, 7.5 });
-		std::copy(map_data_boundary_y.begin(), map_data_boundary_y.end(),
-				_map_test.y);
-	}
-
-	if (MAP_NUMBER_SET == 13) {
-		//13维的地图
-		auto map_data_boundary_x = std::initializer_list<float>( { 0, 6.30,
-				6.30, 0, 0, -1.95, -1.95, -11, -11, -1.95, -1.95, 0, 0 });
-		std::copy(map_data_boundary_x.begin(), map_data_boundary_x.end(),
-				_map_test.x);
-
-		auto map_data_boundary_y = std::initializer_list<float>( { 0, 0, 7.26,
-				7.26, 14.26, 14.26, 5.23, 5.23, 2.03, 2.03, -7.00, -7.00, 0 });
-		std::copy(map_data_boundary_y.begin(), map_data_boundary_y.end(),
-				_map_test.y);
-	}
-
-	if (MAP_NUMBER_SET == 25) {
-		//25维的地图
-		auto map_data_boundary_x = std::initializer_list<float>( { 0, 6.30,
-				6.30, 0, 0, -1.95, -1.95, -11, -11, -9.75, -9.75, -8.60, -8.60,
-				-7.10, -7.10, -5.95, -5.95, -4.45, -4.45, -3.30, -3.30, -1.95,
-				-1.95, 0, 0 });
-		std::copy(map_data_boundary_x.begin(), map_data_boundary_x.end(),
-				_map_test.x);
-
-		auto map_data_boundary_y = std::initializer_list<float>( { 0, 0, 7.26,
-				7.26, 14.26, 14.26, 5.23, 5.23, 2.03, 2.03, 1.48, 1.48, 2.03,
-				2.03, 1.48, 1.48, 2.03, 2.03, 1.48, 1.48, 2.03, 2.03, -7.00,
-				-7.00, 0 });
-		std::copy(map_data_boundary_y.begin(), map_data_boundary_y.end(),
-				_map_test.y);
-	}
-
-// Load the srf01 sonar model，加载超声波射线模型
-
-	if (RAY_NUMBER_SET == 1) {
-		//1根射线模型
-		auto sonar_data_x = std::initializer_list<float>( { 6.00 });
-		std::copy(sonar_data_x.begin(), sonar_data_x.end(), _sonar_model.x);
-		auto sonar_data_y = std::initializer_list<float>( { 0.00 });
-		std::copy(sonar_data_y.begin(), sonar_data_y.end(), _sonar_model.y);
-	}
-
-	if (RAY_NUMBER_SET == 3) {
-		//3根射线模型
-		auto sonar_data_x = std::initializer_list<float>( { 1.00, 6.00, 1.00 });
-		std::copy(sonar_data_x.begin(), sonar_data_x.end(), _sonar_model.x);
-		auto sonar_data_y = std::initializer_list<float>( { -0.2, 0.00, 0.2 });
-		std::copy(sonar_data_y.begin(), sonar_data_y.end(), _sonar_model.y);
-	}
-
-	if (RAY_NUMBER_SET == 5) {
-		//5根射线模型
-		auto sonar_data_x = std::initializer_list<float>( { 1.00, 3.50, 6.00,
-				1.00, 3.50 });
-		std::copy(sonar_data_x.begin(), sonar_data_x.end(), _sonar_model.x);
-		auto sonar_data_y = std::initializer_list<float>( { -0.2, -0.1375, 0,
-				0.2, 0.1375 });
-		std::copy(sonar_data_y.begin(), sonar_data_y.end(), _sonar_model.y);
-	}
-
-	if (RAY_NUMBER_SET == 7) {
-		//7根射线模型
-		auto sonar_data_x = std::initializer_list<float>( { 1.00, 2.00, 3.50,
-				6.00, 1.00, 2.00, 3.50 });
-		std::copy(sonar_data_x.begin(), sonar_data_x.end(), _sonar_model.x);
-		auto sonar_data_y = std::initializer_list<float>( { -0.2, -0.135,
-				-0.1375, 0, 0.2, 0.135, 0.1375 });
-		std::copy(sonar_data_y.begin(), sonar_data_y.end(), _sonar_model.y);
-	}
-
-	if (RAY_NUMBER_SET == 21) {
-		//21根射线模型
-		auto sonar_data_x = std::initializer_list<float>( { 0.60, 1.00, 1.50,
-				2.00, 2.50, 3.00, 3.50, 4.00, 4.50, 5.00, 6.00, 0.60, 1.00,
-				1.50, 2.00, 2.50, 3.00, 3.50, 4.00, 4.50, 5.00 });
-		std::copy(sonar_data_x.begin(), sonar_data_x.end(), _sonar_model.x);
-
-		auto sonar_data_y = std::initializer_list<float>( { -0.015, -0.2, -0.19,
-				-0.135, -0.15, -0.1575, -0.1375, -0.03, -0.04, -0.005, 0, 0.015,
-				0.2, 0.19, 0.135, 0.15, 0.1575, 0.1375, 0.03, 0.04, 0.005 });
-		std::copy(sonar_data_y.begin(), sonar_data_y.end(), _sonar_model.y);
-	}
+//	if (MAP_NUMBER_SET == 4) {
+//		//4维的地图
+//		auto map_data_boundary_x = std::initializer_list<float>(
+//				{ 0.00, 6, 6, 0 });
+//		std::copy(map_data_boundary_x.begin(), map_data_boundary_x.end(),
+//				_map_test.x);
+//		auto map_data_boundary_y = std::initializer_list<float>( { 0.00, 0.00,
+//				7.5, 7.5 });
+//		std::copy(map_data_boundary_y.begin(), map_data_boundary_y.end(),
+//				_map_test.y);
+//	}
+//
+//	if (MAP_NUMBER_SET == 13) {
+//		//13维的地图
+//		auto map_data_boundary_x = std::initializer_list<float>( { 0, 6.30,
+//				6.30, 0, 0, -1.95, -1.95, -11, -11, -1.95, -1.95, 0, 0 });
+//		std::copy(map_data_boundary_x.begin(), map_data_boundary_x.end(),
+//				_map_test.x);
+//
+//		auto map_data_boundary_y = std::initializer_list<float>( { 0, 0, 7.26,
+//				7.26, 14.26, 14.26, 5.23, 5.23, 2.03, 2.03, -7.00, -7.00, 0 });
+//		std::copy(map_data_boundary_y.begin(), map_data_boundary_y.end(),
+//				_map_test.y);
+//	}
+//
+//	if (MAP_NUMBER_SET == 25) {
+//		//25维的地图
+//		auto map_data_boundary_x = std::initializer_list<float>( { 0, 6.30,
+//				6.30, 0, 0, -1.95, -1.95, -11, -11, -9.75, -9.75, -8.60, -8.60,
+//				-7.10, -7.10, -5.95, -5.95, -4.45, -4.45, -3.30, -3.30, -1.95,
+//				-1.95, 0, 0 });
+//		std::copy(map_data_boundary_x.begin(), map_data_boundary_x.end(),
+//				_map_test.x);
+//
+//		auto map_data_boundary_y = std::initializer_list<float>( { 0, 0, 7.26,
+//				7.26, 14.26, 14.26, 5.23, 5.23, 2.03, 2.03, 1.48, 1.48, 2.03,
+//				2.03, 1.48, 1.48, 2.03, 2.03, 1.48, 1.48, 2.03, 2.03, -7.00,
+//				-7.00, 0 });
+//		std::copy(map_data_boundary_y.begin(), map_data_boundary_y.end(),
+//				_map_test.y);
+//	}
+//
+//// Load the srf01 sonar model，加载超声波射线模型
+//
+//	if (RAY_NUMBER_SET == 1) {
+//		//1根射线模型
+//		auto sonar_data_x = std::initializer_list<float>( { 6.00 });
+//		std::copy(sonar_data_x.begin(), sonar_data_x.end(), _sonar_model.x);
+//		auto sonar_data_y = std::initializer_list<float>( { 0.00 });
+//		std::copy(sonar_data_y.begin(), sonar_data_y.end(), _sonar_model.y);
+//	}
+//
+//	if (RAY_NUMBER_SET == 3) {
+//		//3根射线模型
+//		auto sonar_data_x = std::initializer_list<float>( { 1.00, 6.00, 1.00 });
+//		std::copy(sonar_data_x.begin(), sonar_data_x.end(), _sonar_model.x);
+//		auto sonar_data_y = std::initializer_list<float>( { -0.2, 0.00, 0.2 });
+//		std::copy(sonar_data_y.begin(), sonar_data_y.end(), _sonar_model.y);
+//	}
+//
+//	if (RAY_NUMBER_SET == 5) {
+//		//5根射线模型
+//		auto sonar_data_x = std::initializer_list<float>( { 1.00, 3.50, 6.00,
+//				1.00, 3.50 });
+//		std::copy(sonar_data_x.begin(), sonar_data_x.end(), _sonar_model.x);
+//		auto sonar_data_y = std::initializer_list<float>( { -0.2, -0.1375, 0,
+//				0.2, 0.1375 });
+//		std::copy(sonar_data_y.begin(), sonar_data_y.end(), _sonar_model.y);
+//	}
+//
+//	if (RAY_NUMBER_SET == 7) {
+//		//7根射线模型
+//		auto sonar_data_x = std::initializer_list<float>( { 1.00, 2.00, 3.50,
+//				6.00, 1.00, 2.00, 3.50 });
+//		std::copy(sonar_data_x.begin(), sonar_data_x.end(), _sonar_model.x);
+//		auto sonar_data_y = std::initializer_list<float>( { -0.2, -0.135,
+//				-0.1375, 0, 0.2, 0.135, 0.1375 });
+//		std::copy(sonar_data_y.begin(), sonar_data_y.end(), _sonar_model.y);
+//	}
+//
+//	if (RAY_NUMBER_SET == 21) {
+//		//21根射线模型
+//		auto sonar_data_x = std::initializer_list<float>( { 0.60, 1.00, 1.50,
+//				2.00, 2.50, 3.00, 3.50, 4.00, 4.50, 5.00, 6.00, 0.60, 1.00,
+//				1.50, 2.00, 2.50, 3.00, 3.50, 4.00, 4.50, 5.00 });
+//		std::copy(sonar_data_x.begin(), sonar_data_x.end(), _sonar_model.x);
+//
+//		auto sonar_data_y = std::initializer_list<float>( { -0.015, -0.2, -0.19,
+//				-0.135, -0.15, -0.1575, -0.1375, -0.03, -0.04, -0.005, 0, 0.015,
+//				0.2, 0.19, 0.135, 0.15, 0.1575, 0.1375, 0.03, 0.04, 0.005 });
+//		std::copy(sonar_data_y.begin(), sonar_data_y.end(), _sonar_model.y);
+//	}
 	
 
 	_ctrl_state_sub = orb_subscribe(ORB_ID(control_state));  // subscribe the control state
@@ -640,9 +640,9 @@ int task_main(int argc, char *argv[]) {
 		ctrlStateUpdate(updated);
 		if (updated) {
 			u(0, 0) = sensor.x_acc * (float) cos(_yaw)
-					+ sensor.y_acc * (float) sin(_yaw);
+					- sensor.y_acc * (float) sin(_yaw);
 			u(1, 0) = sensor.x_acc * (float) sin(_yaw)
-					- sensor.y_acc * (float) cos(_yaw);
+					+ sensor.y_acc * (float) cos(_yaw);
 //			input(0, 0) = sensor.x_acc;
 //			input(1, 0) = sensor.y_acc;
 			// 1
@@ -720,6 +720,7 @@ int task_main(int argc, char *argv[]) {
 	task_running = false;
 
 	return 0;
+}
 }
 
 int mc_localization_EKF_main(int argc, char *argv[]) {

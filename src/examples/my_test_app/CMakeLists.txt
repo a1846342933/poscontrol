@@ -35,7 +35,7 @@ px4_add_module(
 	MAIN my_test_app
 	STACK_MAIN 2000
 	SRCS
-		my_test_app.c
+		my_test_app.cpp
 	DEPENDS
 		platforms__common
 	)

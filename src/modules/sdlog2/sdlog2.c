@@ -113,6 +113,7 @@
 #include <uORB/topics/cpuload.h>
 #include <uORB/topics/sonar_distance.h>
 #include <uORB/topics/alt_estimate.h>
+#include <uORB/topics/ukf_localization.h>
 //#include <uORB/topics/alt_ctrl.h>
 
 #include <systemlib/systemlib.h>
@@ -1232,6 +1233,7 @@ int sdlog2_thread_main(int argc, char *argv[])
 		struct vehicle_gps_position_s dual_gps_pos;
 		struct sonar_distance_s sonar;
 		struct alt_estimate_s alt;
+		struct ukf_localization_s ukf_status;
 		//struct alt_ctrl_s alt_control;
 	} buf;
 
@@ -1296,6 +1298,7 @@ int sdlog2_thread_main(int argc, char *argv[])
 			struct log_LOAD_s log_LOAD;
 			struct log_ALT_s log_ALT;
 			struct log_ALT1_s log_ALT1;
+			struct log_UKFL_s log_UKFL;
 		} body;
 	} log_msg = {
 		LOG_PACKET_HEADER_INIT(0)
@@ -1347,6 +1350,7 @@ int sdlog2_thread_main(int argc, char *argv[])
 		int cpuload_sub;
 		int sonar_sub;
 		int alt_sub;
+		int ukf_localization_sub;
 	//	int alt_ctrl_sub;
 	} subs;
 
@@ -1392,6 +1396,7 @@ int sdlog2_thread_main(int argc, char *argv[])
 	subs.cpuload_sub = -1;
 	subs.sonar_sub = -1;		//sonar
 	subs.alt_sub = -1;
+	subs.ukf_localization_sub = -1;
 	//subs.alt_ctrl_sub = -1;
 
 	/* add new topics HERE */
@@ -2153,6 +2158,26 @@ int sdlog2_thread_main(int argc, char *argv[])
 				//log_msg.body.log_DIST.covariance = buf.distance_sensor.covariance;
 				LOGBUFFER_WRITE_AND_COUNT(DIST);
 			}
+
+			// by fxk UKF localization
+				if(copy_if_updated(ORB_ID(ukf_localization), &subs.ukf_localization_sub, &buf.ukf_status)){
+					log_msg.msg_type = LOG_UKFL_MSG;
+					log_msg.body.log_UKFL.x = buf.ukf_status.x;
+					log_msg.body.log_UKFL.vx = buf.ukf_status.vx;
+					log_msg.body.log_UKFL.y = buf.ukf_status.y;
+					log_msg.body.log_UKFL.vy = buf.ukf_status.vy;
+					log_msg.body.log_UKFL.psi = buf.ukf_status.psi;
+					log_msg.body.log_UKFL.distance1 = buf.ukf_status.laser_distance[0];
+					log_msg.body.log_UKFL.distance2 = buf.ukf_status.laser_distance[1];
+					log_msg.body.log_UKFL.distance3 = buf.ukf_status.laser_distance[2];
+					log_msg.body.log_UKFL.distance4 = buf.ukf_status.laser_distance[3];
+					log_msg.body.log_UKFL.corrected = buf.ukf_status.corrected;
+					log_msg.body.log_UKFL.acc_x = buf.ukf_status.acc[0];
+					log_msg.body.log_UKFL.acc_y = buf.ukf_status.acc[1];
+					log_msg.body.log_UKFL.yaw_rate = buf.ukf_status.yaw_rate;
+					log_msg.body.log_UKFL.yaw = buf.ukf_status.yaw;
+					LOGBUFFER_WRITE_AND_COUNT(UKFL);
+	}
 
 			/* --- ESTIMATOR STATUS --- */
 			if (copy_if_updated(ORB_ID(estimator_status), &subs.estimator_status_sub, &buf.estimator_status)) {
