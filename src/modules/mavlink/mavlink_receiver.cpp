@@ -1413,6 +1413,7 @@ MavlinkReceiver::handle_message_manual_control(mavlink_message_t *msg)
 
 		manual.timestamp = hrt_absolute_time();
 		manual.x = man.x / 1000.0f;
+		//iffpc
 		//manual.x = 0.52f;
 		manual.y = man.y / 1000.0f;
 		//manual.y=0.34f;
@@ -2031,6 +2032,9 @@ MavlinkReceiver::handle_message_hil_state_quaternion(mavlink_message_t *msg)
 			_local_pos_pub = orb_advertise(ORB_ID(vehicle_local_position), &hil_local_pos);
 
 		} else {
+			//iffpc
+			warnx("2035 mavlp_t =%.3f",(double)hil_local_pos.timestamp);
+			//iffpc
 			orb_publish(ORB_ID(vehicle_local_position), _local_pos_pub, &hil_local_pos);
 		}
 	}

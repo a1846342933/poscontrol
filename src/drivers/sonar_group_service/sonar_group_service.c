@@ -62,18 +62,18 @@ static int daemon_task;
 
 
 
-// 声纳主函数
+//
 __EXPORT int sonargroup_service_main(int argc, char *argv[]);
 int sonargroup_service_thread_main(int argc, char *argv[]);
-//UART初始化，默认选择UART7
+//UARTUART7
 static int uart_init(char * uart_name);
-// 设置波特率
+//
 static int set_uart_baudrate(const int fd, unsigned int baud);
-// 发送SRF指令
+//
 static void SRF01(int fd_UART,unsigned char Address, unsigned char cmd);
-// 读取测量距离
+// ��
 static int GetRange_new(int fd_UART,unsigned char Address);
-// 使用提示函数
+//
 static void usage(const char *reason);
 
 static void usage(const char *reason)
@@ -158,10 +158,10 @@ int sonargroup_service_main(int argc, char *argv[])
     return(1);
 }
 
-// 最初版本超声波采集程序
+//
 int sonargroup_service_thread_main(int argc, char *argv[])
 {
-    //初始化UARt8
+    //
     int uart_fd = uart_init("/dev/ttyS6");
     if(false == uart_fd)
     	return -1;
@@ -171,9 +171,9 @@ int sonargroup_service_thread_main(int argc, char *argv[])
     }
     warnx("[SONAR_GROUP]UART init is successful\n");
     //static int count1=0;
-    //线程启动标志
+    //
     thread_running = true;
-    //初始化数据结构体
+    //
     struct sonar_distance_s sonar;
     memset(&sonar, 0, sizeof(sonar));
     sonar.count=0;
@@ -182,20 +182,20 @@ int sonargroup_service_thread_main(int argc, char *argv[])
 	sonar.distance_down[1]=0;
 	sonar.distance_down[0]=0;
 	sonar.vz=0.0f;
-    //公告主题
+    //��
     orb_advert_t SonarGroupDistance_pub = orb_advertise(ORB_ID(sonar_distance), &sonar);
 
     warnx("[SONAR_GROUP]service start successfully\n");
    //
 
-    //获取所有超声波距离 Sonar_group GetRangeAll
-    // 周期200ms   18,54   距离超过1米时跳变
+    //�� Sonar_group GetRangeAll
+    // 200ms   18,54
     char sonar_flag[5] = {1,0,0,0,0};
     while(!thread_should_exit)
     {
     	if(sonar_flag[0])
     	    	{
-    		//啦啦啦
+    		//
     	    		SRF01(uart_fd,4,RANGE_CM);
     	    		//wait 70ms to recive the respons
     	    		usleep(20000);		//10000
@@ -230,7 +230,7 @@ int sonargroup_service_thread_main(int argc, char *argv[])
 		usleep(50000);		// 50000
 
 		//        sonar.count++;
-		//========四周超声波============
+		//====================
 //		for (int i=2;i<=5;i++)
 //		{
 //			int range=GetRange_new(uart_fd,i);
@@ -258,7 +258,7 @@ int sonargroup_service_thread_main(int argc, char *argv[])
 								sonar.distance[0]=range;							//add by yly
 								sonar.status[0]=0;
 							}
-//		//暂时屏蔽定高超声波
+//		//
 //		sonar.distance[0] = 20;
 //		sonar.status[0] = 1;
 
@@ -303,7 +303,7 @@ int sonargroup_service_thread_main(int argc, char *argv[])
 
 		orb_publish(ORB_ID(sonar_distance), SonarGroupDistance_pub, &sonar);
     }
-    //关闭线程，串口
+    //
     warnx("[SONAR_GROUP] exiting.\n");
 
     close(uart_fd);
@@ -346,8 +346,8 @@ int sonargroup_service_thread_main(int argc, char *argv[])
 //    	usleep(2000);
 //    }
 //
-//    //获取所有超声波距离 Sonar_group GetRangeAll
-//    // 周期200ms   18,54   距离超过1米时跳变
+//    //�� Sonar_group GetRangeAll
+//    // 200ms   18,54
 //    char sonar_flag[5] = {0,1,1,1,1};
 //    while(!thread_should_exit)
 //    {
@@ -372,7 +372,7 @@ int sonargroup_service_thread_main(int argc, char *argv[])
 //    		}
 //    	}
 //		sonar.count++;
-//		//暂时屏蔽定高超声波
+//		//
 //		sonar.distance[0] = 20;
 //		sonar.status[0] = 1;
 //
@@ -416,7 +416,7 @@ int sonargroup_service_thread_main(int argc, char *argv[])
 //
 //		orb_publish(ORB_ID(sonar_distance), SonarGroupDistance_pub, &sonar);
 //    }
-//    //关闭线程，串口
+//    //
 //    warnx("[SONAR_GROUP] exiting.\n");
 //
 //    close(uart_fd);
@@ -429,7 +429,7 @@ int sonargroup_service_thread_main(int argc, char *argv[])
 void SRF01(int fd_UART,unsigned char Address,unsigned char cmd)
 {
   
-  //配置成ＧＰＩＯ模式，发送高低电平“break"
+  //reak"
     stm32_configgpio(GPIO_UART8_TX_BREAK);
     // Send a 2ms break to begin communications with the SRF01
     stm32_gpiowrite(GPIO_UART8_TX_BREAK,0);
@@ -437,7 +437,7 @@ void SRF01(int fd_UART,unsigned char Address,unsigned char cmd)
     stm32_gpiowrite(GPIO_UART8_TX_BREAK,1);
     usleep(10);
 
-    //配置成URAT模式，发送指令
+    //
     stm32_configgpio(GPIO_UART8_TX);
 
   /*  ioctl(fd_UART, TIOCSBRK,0);
@@ -456,19 +456,19 @@ void SRF01(int fd_UART,unsigned char Address,unsigned char cmd)
 
 int GetRange_new(int fd_UART,unsigned char Address)
 {
-    //发送测距指令
+    //
     SRF01(fd_UART,Address,GETRANGE);
-    //等待1ms反馈
+    //��
     //usleep(1000);//yly
     usleep(2000);
 
-    //高低位两个字节
+    //
     unsigned char hByte,lByte;
     int readH=read(fd_UART,&hByte,1);
     int readL=read(fd_UART,&lByte,1);
 
 
-    //如果接收不正常，反馈-1979错误代码
+    //
     if ((readH!=1) || (readL!=1))
     {
         return -1979;
@@ -529,7 +529,7 @@ int set_uart_baudrate(const int fd, unsigned int baud)
 
 int uart_init(char * uart_name)
 {
-    // 可读写|如果欲打开的文件为终端机设备时，则不会将该终端机当成进程控制终端机|非阻塞
+    //
     int serial_fd = open(uart_name, O_RDWR | O_NOCTTY | O_NONBLOCK);
 
     if (serial_fd < 0) {

@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\modules",
+    "\\src\\modules\\mc_pos_control",
+    "\\src\\modules\\mc_pos_helper"
+  ],
+  "SelectedNode": "\\src\\modules\\mc_pos_helper\\mc_pos_helper.c",
+  "PreviewInSolutionExplorer": false
+}

@@ -49,10 +49,13 @@
 #include <systemlib/systemlib.h>
 #include <systemlib/err.h>
 
+#include <uORB/uORB.h>
+#include <uORB/topics/pos_helper.h>
 static bool thread_should_exit = false;		/**< daemon exit flag */
 static bool thread_running = false;		/**< daemon status flag */
 static int daemon_task;				/**< Handle of daemon task / thread */
-
+orb_advert_t	pos_helper_pub;
+struct pos_helper_s manual;
 /**
  * daemon management function.
  */
@@ -118,7 +121,7 @@ int px4_daemon_app_main(int argc, char *argv[])
 
 	if (!strcmp(argv[1], "status")) {
 		if (thread_running) {
-			warnx("\trunning\n");
+			warnx("\trunning\n_mz=%.3f",(double)manual.mz);
 
 		} else {
 			warnx("\tnot started\n");
@@ -135,11 +138,17 @@ int px4_daemon_thread_main(int argc, char *argv[])
 {
 
 	warnx("[daemon] starting\n");
-
+	int pos_helper_sub = orb_subscribe(ORB_ID(pos_helper));
+	memset(&manual, 0, sizeof(manual));
+	pos_helper_pub = orb_advertise(ORB_ID(pos_helper), &manual);
+	//orb_publish(ORB_ID(pos_helper), pos_helper_pub, &manual);
 	thread_running = true;
 
 	while (!thread_should_exit) {
 		warnx("Hello daemon!\n");
+		manual.mz=0.5f;
+		orb_publish(ORB_ID(pos_helper), pos_helper_pub, &manual);
+		orb_copy(ORB_ID(pos_helper), pos_helper_sub, &manual);
 		sleep(10);
 	}
 

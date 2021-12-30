@@ -747,8 +747,12 @@ void Ekf2::task_main()
 
 			// Position of body origin in local NED frame
 			_ekf.get_position(pos);
-			lpos.x = (_ekf.local_position_is_valid()) ? pos[0] : 0.0f;
-			lpos.y = (_ekf.local_position_is_valid()) ? pos[1] : 0.0f;
+			//IFFPC
+			//lpos.x = (_ekf.local_position_is_valid()) ? pos[0] : 0.0f;
+			//lpos.y = (_ekf.local_position_is_valid()) ? pos[1] : 0.0f;
+			lpos.x=pos[0];
+			lpos.y=pos[1];
+			//IFFPC
 			lpos.z = pos[2];
 
 			// Velocity of body origin in local NED frame (m/s)
@@ -793,7 +797,22 @@ void Ekf2::task_main()
 				_lpos_pub = orb_advertise(ORB_ID(vehicle_local_position), &lpos);
 
 			} else {
+				//lpos.vx=2.0f;
+				lpos.v_xy_valid=true;
+				lpos.xy_valid=true;
+				lpos.z_valid=false;
+				//lpos.eph=0;
+				//lpos.epv=0;
+				//lpos.vz=0;
+				//lpos.v_z_valid=false;
+				lpos.z_global=false;
+				lpos.dist_bottom_valid=false;
+				//lpos.dist_bottom_rate=0;
+				//lpos.dist_bottom=0;
+				//warnx("1226 vx =%.3f,vy =%.3f,vz =%.3f",(double)lpos.vx,(double)lpos.vy,(double)lpos.vz);
 				orb_publish(ORB_ID(vehicle_local_position), _lpos_pub, &lpos);
+				//lpos.v_xy_valid=false;
+				//lpos.xy_valid=false;
 			}
 
 			// generate and publish global position data
@@ -837,6 +856,7 @@ void Ekf2::task_main()
 					_vehicle_global_position_pub = orb_advertise(ORB_ID(vehicle_global_position), &global_pos);
 
 				} else {
+
 					orb_publish(ORB_ID(vehicle_global_position), _vehicle_global_position_pub, &global_pos);
 				}
 			}

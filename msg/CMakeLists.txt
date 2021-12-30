@@ -125,7 +125,8 @@ set(msg_file_names
 	alt_estimate.msg
 	ekf_localization.msg
 	ukf_localization.msg
-	#alt_ctrl.msg
+        pos_helper.msg
+	alt_ctrl.msg
 	)
 
 # Get absolute paths

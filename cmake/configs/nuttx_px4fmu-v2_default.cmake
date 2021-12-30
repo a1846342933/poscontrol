@@ -67,7 +67,7 @@ set(config_module_list
 	systemcmds/reboot
 	#systemcmds/sd_bench
 	systemcmds/top
-	#systemcmds/topic_listener
+	systemcmds/topic_listener
 	systemcmds/ver
 
 	#
@@ -98,7 +98,7 @@ set(config_module_list
 	# Estimation modules
 	#
 	modules/attitude_estimator_q
-	#modules/position_estimator_inav
+        #modules/position_estimator_inav
 	#modules/local_position_estimator
 	modules/ekf2
 
@@ -107,9 +107,10 @@ set(config_module_list
 	#
 	#modules/fw_pos_control_l1
 	#modules/fw_att_control
-	modules/mc_att_control
-	modules/mc_pos_control
+	#modules/mc_att_control
+	#modules/mc_pos_control
 	#modules/vtol_att_control
+        modules/mc_pos_helper
 
 	#
 	# Logging
@@ -172,12 +173,12 @@ set(config_module_list
 	#examples/math_demo
 	# Tutorial code from
 	# https://px4.io/dev/px4_simple_app
-	 examples/px4_simple_app
-	 examples/my_test_app
+	 #examples/px4_simple_app
+	 #examples/my_test_app
 
 	# Tutorial code from
 	# https://px4.io/dev/daemon
-	 examples/px4_daemon_app
+	#examples/px4_daemon_app
 
 	# Tutorial code from
 	# https://px4.io/dev/debug_values

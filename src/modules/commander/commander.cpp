@@ -120,7 +120,9 @@
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vtol_vehicle_status.h>
-
+//iffpc
+//#include <uORB/topics/pos_helper.h>
+//iffpc
 typedef enum VEHICLE_MODE_FLAG
 {
 	VEHICLE_MODE_FLAG_CUSTOM_MODE_ENABLED=1, /* 0b00000001 Reserved for future use. | */
@@ -2888,7 +2890,26 @@ int commander_thread_main(int argc, char *argv[])
 		/* publish states (armed, control mode, vehicle status) at least with 5 Hz */
 		if (counter % (200000 / COMMANDER_MONITORING_INTERVAL) == 0 || status_changed) {
 			set_control_mode();
+			//iffpc
 			control_mode.timestamp = now;
+			//control_mode.flag_control_position_enabled=true;
+			//int pos_helper_sub=orb_subscribe(ORB_ID(pos_helper));
+			//pos_helper_s c_pos_helper;
+			//orb_copy(ORB_ID(pos_helper),pos_helper_sub,&c_pos_helper);
+			//if(c_pos_helper.f1==1)
+			//	struct manual_control_setpoint_s manual;
+			//{
+		//	control_mode.flag_control_velocity_enabled=false;
+			//control_mode.flag_control_rates_enabled=true;
+			//control_mode.flag_control_attitude_enabled=true;
+		   // control_mode.flag_control_altitude_enabled=true;
+		//	}else
+		//	{
+		//		control_mode.flag_control_velocity_enabled=true;
+		//		control_mode.flag_control_rates_enabled=true;
+	//			control_mode.flag_control_attitude_enabled=false;
+		//		control_mode.flag_control_altitude_enabled=false;
+		//	}
 			orb_publish(ORB_ID(vehicle_control_mode), control_mode_pub, &control_mode);
 
 			status.timestamp = now;
@@ -3482,13 +3503,19 @@ set_control_mode()
 	case vehicle_status_s::NAVIGATION_STATE_MANUAL:
 		control_mode.flag_control_manual_enabled = true;
 		control_mode.flag_control_auto_enabled = false;
-		control_mode.flag_control_rates_enabled = stabilization_required();
-		control_mode.flag_control_attitude_enabled = stabilization_required();
+		//iffpc
+		//control_mode.flag_control_rates_enabled = stabilization_required();
+		control_mode.flag_control_rates_enabled =true;
+		//control_mode.flag_control_attitude_enabled = stabilization_required();
+		control_mode.flag_control_attitude_enabled = true;
 		control_mode.flag_control_rattitude_enabled = false;
 		control_mode.flag_control_altitude_enabled = false;
-		control_mode.flag_control_climb_rate_enabled = false;
-		control_mode.flag_control_position_enabled = false;
-		control_mode.flag_control_velocity_enabled = false;
+		//control_mode.flag_control_climb_rate_enabled = false;
+		control_mode.flag_control_climb_rate_enabled = true;
+	//	control_mode.flag_control_position_enabled = false;
+		control_mode.flag_control_position_enabled = !status.in_transition_mode;
+	//	control_mode.flag_control_velocity_enabled = false;
+		control_mode.flag_control_velocity_enabled = !status.in_transition_mode;
 		control_mode.flag_control_acceleration_enabled = false;
 		control_mode.flag_control_termination_enabled = false;
 		break;
@@ -3543,9 +3570,13 @@ set_control_mode()
 		control_mode.flag_control_rates_enabled = true;
 		control_mode.flag_control_attitude_enabled = true;
 		control_mode.flag_control_rattitude_enabled = false;
-		control_mode.flag_control_altitude_enabled = true;
+		//iffpc
+		//control_mode.flag_control_altitude_enabled = true;
+		control_mode.flag_control_altitude_enabled = false;
 		control_mode.flag_control_climb_rate_enabled = true;
+		//iffpc
 		control_mode.flag_control_position_enabled = !status.in_transition_mode;
+		//control_mode.flag_control_position_enabled = false;
 		control_mode.flag_control_velocity_enabled = !status.in_transition_mode;
 		control_mode.flag_control_acceleration_enabled = false;
 		control_mode.flag_control_termination_enabled = false;
